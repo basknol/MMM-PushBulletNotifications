@@ -1,0 +1,26 @@
+{
+  "name": "mmm-pushbulletnotifications",
+  "version": "1.0.0",
+  "description": "Module that displays phone notifications via the PushBullet API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/basknol/MMM-PushBulletNotifications.git"
+  },
+  "keywords": [
+    "MagicMirror",    
+    "pushbullet",
+    "phone notification",
+    "notification",
+    "smart mirror"
+  ],
+  "main": "PushBulletNotifications.js",
+  "author": "Bas Knol",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/basknol/MMM-PushBulletNotifications/issues"
+  },
+  "homepage": "https://github.com/basknol/MMM-PushBulletNotifications#readme",
+  "dependencies": {
+    "pushbullet": "^2.1.0"
+  }
+}
