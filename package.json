@@ -12,8 +12,7 @@
     "phone notification",
     "notification",
     "smart mirror"
-  ],
-  "main": "PushBulletNotifications.js",
+  ],  
   "author": "Bas Knol",
   "license": "MIT",
   "bugs": {
@@ -21,6 +20,6 @@
   },
   "homepage": "https://github.com/basknol/MMM-PushBulletNotifications#readme",
   "dependencies": {
-    "pushbullet": "^2.1.0"
+    "pushbullet": "^2.2.0"
   }
 }
