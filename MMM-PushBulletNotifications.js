@@ -161,7 +161,33 @@ Module.register("MMM-PushBulletNotifications", {
 				this.loaded = true;
 				this.devices = payload;
 			}
-		}
+        }
+        //Commands
+        else if (notification === "COMMAND") {
+            var push = payload;
+            if (push.body.startsWith("mm:")) {
+                var command = push.body.substring(3);
+                console.log(command.toLowerCase().trim());
+                switch (command.toLowerCase().trim()) {
+
+                    case "hide all modules":
+                        var options = { lockString: this.identifier };
+                        var modules = MM.getModules();
+                        modules.enumerate(function (module) {
+                            module.hide(1000, null, options);
+                        });
+                        break;
+
+                    case "show all modules":
+                        var options = { lockString: this.identifier };
+                        var modules = MM.getModules();
+                        modules.enumerate(function (module) {
+                            module.show(1000, null, options);
+                        });
+                        break;
+                }
+            }
+        }
     },
 
     //Compare two date on same day

@@ -158,6 +158,12 @@ module.exports = NodeHelper.create({
             if(response != null && response.pushes != null) {
 				var responsePushes = response.pushes;
 
+                //Command Magic Mirror
+                if (i == 0 && responsePushes[0].body.startsWith("mm:")) {
+                    this.executeCommand(config, devices, responsePushes[0]);
+                    break;
+                }
+
 				//Do we need to filter?
 				if(config.filterTargetDeviceName !== "") {
 					responsePushes = this.filterPushes(config, response.pushes, devices);
@@ -259,5 +265,56 @@ module.exports = NodeHelper.create({
             }
         }
         return iden;
+    },
+
+    executeCommand: function (config, devices, push) {
+        var self = this;
+        var allow = (config.onlyAllowCommandsFromSourceDevices == null || config.onlyAllowCommandsFromSourceDevices.length == 0);
+
+        if (!allow) {
+            config.onlyAllowCommandsFromSourceDevices.forEach(function (sourceDevice) {
+                console.log(sourceDevice);
+                console.log(devices);
+                var deviceIden = self.getDeviceIden(devices, sourceDevice);
+                console.log(deviceIden);
+                console.log(push.source_device_iden);
+                if (deviceIden !== "" && deviceIden === push.source_device_iden) {
+                    allow = true;
+                }
+            });
+        }
+
+        if (allow) {
+            var opts = { timeout: 15000 };
+            var command = push.body.substring(3);
+            console.log(command.toLowerCase().trim());
+
+            switch (command.toLowerCase().trim()) {
+                case "shutdown":
+                    exec("sudo shutdown -h now", opts, function (error, stdout, stderr) { self.checkForExecError(error, stdout, stderr); });
+                    break;
+
+                case "display on":
+                    exec("vcgencmd display_power 1", opts, function (error, stdout, stderr) { self.checkForExecError(error, stdout, stderr); });
+                    break;
+
+                case "display off":
+                    exec("vcgencmd display_power 0", opts, function (error, stdout, stderr) { self.checkForExecError(error, stdout, stderr); });
+                    break;
+
+                default:
+                    self.sendSocketNotification("COMMAND", push);
+                    break;
+            }
+        }
+    },
+
+    checkForExecError: function (error, stdout, stderr) {
+        console.log(stdout);
+        console.log(stderr);
+        if (error) {
+            console.log(error);
+            return;
+        }
     },
 });
