@@ -28,8 +28,8 @@ Replace <your_access_token_here> with the Access Token created in PushBullet en 
 This device can be set as filter (see configuration options) to show only notifications send to this device.
 
 ### Other
-	* [Play-sound](https://www.npmjs.com/package/play-sound) package is used to play a sound when a notification is received.
-	* The module [MMM-TTS](https://github.com/fewieden/MMM-TTS) of GitHub user [fewieden](https://github.com/fewieden) is used for offline Text-To-Speech. See installation instructions [here](https://github.com/fewieden/MMM-TTS)
+- [Play-sound](https://www.npmjs.com/package/play-sound) package is used to play a sound when a notification is received.
+- The module [MMM-TTS](https://github.com/fewieden/MMM-TTS) of GitHub user [fewieden](https://github.com/fewieden) is used for offline Text-To-Speech. See installation instructions [here](https://github.com/fewieden/MMM-TTS)
 
 ## Installation
 In your terminal, go to your MagicMirror's Module folder:
@@ -131,12 +131,12 @@ The following properties can be configured:
 			<td>Array value containing strings. If this array is empty commands from every device is allowed.<br />Each string should be the nickname of a PushBullet device. To get a list of devices from the API run the curl command: curl --header 'Access-Token: <your_access_token_here>' https://api.pushbullet.com/v2/devices <br />
 				<br />Commands should be prefixed with 'mm:'. A list of command currently supported.
 				<ul>
-					<li>`mm:shutdown`</li>
-					<li>`mm:hide all modules`</li>
-					<li>`mm:show all modules`</li>
-					<li>`mm:display off`</li>
-					<li>`mm:display on`</li>
-					<li>`mm:say:Hello World` (this requires that the [MMM-TTS](https://github.com/fewieden/MMM-TTS) is installed)</li>
+					<li>mm:shutdown</li>
+					<li>mm:hide all modules</li>
+					<li>mm:show all modules</li>
+					<li>mm:display off</li>
+					<li>mm:display on</li>
+					<li>mm:say:Hello World (this requires that the <a href="https://github.com/fewieden/MMM-TTS">MMM-TTS</a> is installed)</li>
 				</ul>
 				<br /><b>Example:</b> <code>['PC-BAS', 'iPhone Bas']</code>
 				<br /><b>Default value:</b> empty array <code>[]</code>
