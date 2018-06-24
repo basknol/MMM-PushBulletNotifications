@@ -8,15 +8,18 @@
 Module.register("MMM-PushBulletNotifications", {
 	defaults: {
 		accessToken: "", //PushBullet API Access Token
-		numberOfNotifications: 5,
+		numberOfNotifications: 3,
 		filterTargetDeviceName: "", //Only show notification send to all devices or the filterd target device
-		showNotificationsSentToAllDevices: true, //Show notifications to all devices
+        showNotificationsSentToAllDevices: true, //Show notifications to all devices
+        onlyAllowCommandsFromSourceDevices: [],
         fetchLimitPushBullet: 50,
         showNotificationsOnLoad: true,
         showMessage: true,
         showIcons: true,
         showDateTime: true,
         localesDateTime: 'nl-NL',
+        playSoundOnNotificationReceived: true,
+        soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
 		maxMsgCharacters: 50,
 		maxHeaderCharacters: 32
 	},
@@ -168,23 +171,30 @@ Module.register("MMM-PushBulletNotifications", {
             if (push.body.startsWith("mm:")) {
                 var command = push.body.substring(3);
                 console.log(command.toLowerCase().trim());
-                switch (command.toLowerCase().trim()) {
 
-                    case "hide all modules":
-                        var options = { lockString: this.identifier };
-                        var modules = MM.getModules();
-                        modules.enumerate(function (module) {
-                            module.hide(1000, null, options);
-                        });
-                        break;
+                if (command.startsWith("say:")) {
+                    var message = command.substring(4);
+                    this.sendNotification('MMM-TTS', $message);
+                }
+                else {
+                    switch (command.toLowerCase().trim()) {
 
-                    case "show all modules":
-                        var options = { lockString: this.identifier };
-                        var modules = MM.getModules();
-                        modules.enumerate(function (module) {
-                            module.show(1000, null, options);
-                        });
-                        break;
+                        case "hide all modules":
+                            var options = { lockString: this.identifier };
+                            var modules = MM.getModules();
+                            modules.enumerate(function (module) {
+                                module.hide(1000, null, options);
+                            });
+                            break;
+
+                        case "show all modules":
+                            var options = { lockString: this.identifier };
+                            var modules = MM.getModules();
+                            modules.enumerate(function (module) {
+                                module.show(1000, null, options);
+                            });
+                            break;
+                    }
                 }
             }
         }

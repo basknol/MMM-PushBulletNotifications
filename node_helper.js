@@ -7,6 +7,8 @@
 
 var NodeHelper = require("node_helper");
 var PushBullet = require("pushbullet"); //https://www.npmjs.com/package/pushbullet
+var exec = require("child_process").exec;
+var player = require('play-sound')(opts = { players: ['omxplayer'] })
 
 module.exports = NodeHelper.create({
 
@@ -36,7 +38,7 @@ module.exports = NodeHelper.create({
             }
 
             if (this.config.showNotificationsOnLoad) {
-                this.loadPushes(this.pusher, this.config);
+                this.loadPushes(this.pusher, this.config, true);
             }
 		}
 	},
@@ -67,14 +69,14 @@ module.exports = NodeHelper.create({
          */ 
 	    stream.on("tickle", function (type) {
             if (type === "push") {
-                self.loadPushes(self.pusher, config);
+                self.loadPushes(self.pusher, config, false);
 		    }
 		});
 
         stream.connect();
     },
 
-    loadPushes: function (pusher, config) {
+    loadPushes: function (pusher, config, init) {
         var self = this;
 
         //Check to see if we need to filter
@@ -82,6 +84,10 @@ module.exports = NodeHelper.create({
             //Get pushes of all devices directly
             self.getPushesAsync(pusher, config, null).then(function (response) {
                 if (response != null && response.pushes != null && response.pushes.length > 0) {
+                    if (!init) {
+                        self.playSound(config);
+                    }
+
                     //Sending pushes to mirror
                     self.sendSocketNotification("PUSHES", response.pushes);
                 }
@@ -91,9 +97,22 @@ module.exports = NodeHelper.create({
             //Filter out pushes that do not belong to 'filterTargetDeviceName', check if we also need to add pushes sent to 'all devices'
             self.getFilteredPushesAsync(pusher, config).then(function (result) {
                 if (result != null && result.length > 0) {
+                    if (!init) {
+                        self.playSound(config);
+                    }
+
                     //Sending pushes to mirror
                     self.sendSocketNotification("PUSHES", result);
                 }
+            });
+        }
+    },
+
+    //Play sound
+    playSound: function (config) {
+        if (config.soundFile != null && config.playSoundOnNotificationReceived) {
+            player.play(config.soundFile, function (err) {
+                if (err) console.log("Error:" + err);
             });
         }
     },
@@ -171,7 +190,10 @@ module.exports = NodeHelper.create({
 
 				//Add pushes to return array
 				responsePushes.forEach(function(p) {
-					pushes.push(p);
+                    //Filter out command Magic Mirror
+                    if (!p.body.startsWith("mm:")) {
+                        pushes.push(p);
+                    }
 				});
 
 				//Are there more pushes (cursor?) and do we need to fetch more pushes?

@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/basknol/MMM-PushBulletNotifications#readme",
   "dependencies": {
-    "pushbullet": "^2.2.0"
+    "pushbullet": "^2.2.0",
+    "play-sound": "^1.1.2"
   }
 }
