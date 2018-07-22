@@ -174,7 +174,7 @@ Module.register("MMM-PushBulletNotifications", {
 
                 if (command.startsWith("say:")) {
                     var message = command.substring(4);
-                    this.sendNotification('MMM-TTS', $message);
+                    this.sendNotification('MMM-TTS', message);
                 }
                 else {
                     switch (command.toLowerCase().trim()) {

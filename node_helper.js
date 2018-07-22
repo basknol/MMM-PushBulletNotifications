@@ -295,11 +295,7 @@ module.exports = NodeHelper.create({
 
         if (!allow) {
             config.onlyAllowCommandsFromSourceDevices.forEach(function (sourceDevice) {
-                console.log(sourceDevice);
-                console.log(devices);
                 var deviceIden = self.getDeviceIden(devices, sourceDevice);
-                console.log(deviceIden);
-                console.log(push.source_device_iden);
                 if (deviceIden !== "" && deviceIden === push.source_device_iden) {
                     allow = true;
                 }

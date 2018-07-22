@@ -128,7 +128,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>onlyAllowCommandsFromSourceDevices</code></td>
-			<td>Array value containing strings. If this array is empty commands from every device is allowed.<br />Each string should be the nickname of a PushBullet device. To get a list of devices from the API run the curl command: curl --header 'Access-Token: <your_access_token_here>' https://api.pushbullet.com/v2/devices <br />
+			<td>Array value containing strings. If this array is empty commands from every device is allowed.<br />Each string should be the nickname of a PushBullet device. To get a list of devices from the API run the curl command: <code>curl --header 'Access-Token: <your_access_token_here>' https://api.pushbullet.com/v2/devices </code><br />
 				<br />Commands should be prefixed with 'mm:'. A list of command currently supported.
 				<ul>
 					<li>mm:shutdown</li>
@@ -138,7 +138,7 @@ The following properties can be configured:
 					<li>mm:display on</li>
 					<li>mm:say:Hello World (this requires that the <a href="https://github.com/fewieden/MMM-TTS">MMM-TTS</a> is installed)</li>
 				</ul>
-				<br /><b>Example:</b> <code>['PC-BAS', 'iPhone Bas']</code>
+				<br /><b>Example:</b> <code>['MY-PC', 'My iPhone']</code>
 				<br /><b>Default value:</b> empty array <code>[]</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
