@@ -1,6 +1,6 @@
 {
   "name": "mmm-pushbulletnotifications",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Module that displays phone notifications via the PushBullet API",
   "repository": {
     "type": "git",

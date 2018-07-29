@@ -22,7 +22,9 @@ Module.register("MMM-PushBulletNotifications", {
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
 		maxMsgCharacters: 50,
 		maxHeaderCharacters: 32
-	},
+    },
+
+    requiresVersion: "2.3.1", // Minimum required version of MagicMirror
 
     //Keep track of devices and pushes
 	devices: [],
