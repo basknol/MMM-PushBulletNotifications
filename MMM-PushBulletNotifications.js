@@ -62,26 +62,32 @@ Module.register("MMM-PushBulletNotifications", {
                     var device = self.getDevice(o.source_device_iden);
                     var iconPath = "/modules/MMM-PushBulletNotifications/icons/";
 
-                    //Set icon based on device
-                    switch (device.icon) {
-                        case "phone":
-                            iconPath += 'phone.png';
-                            break;
-                        case "desktop":                            
-                            if (device.type == "windows") {
-                                iconPath += 'windows.png';
-                            }
-                            else {
-                                iconPath += 'desktop.png';
-                            }
-                            break;
-                        case "system":
-                            iconPath += 'system.png';
-                            break;
-                        default:
-                            iconPath += 'message.png';
-                            break;
+                    //Sometimes device is null because push does not contain a 'source_device_iden'
+                    if (device == null) {
+                        iconPath += 'message.png';
                     }
+                    else {
+                        //Set icon based on device
+                        switch (device.icon) {
+                            case "phone":
+                                iconPath += 'phone.png';
+                                break;
+                            case "desktop":
+                                if (device.type == "windows") {
+                                    iconPath += 'windows.png';
+                                }
+                                else {
+                                    iconPath += 'desktop.png';
+                                }
+                                break;
+                            case "system":
+                                iconPath += 'system.png';
+                                break;
+                            default:
+                                iconPath += 'message.png';
+                                break;
+                        }
+                    }                    
 
                     icon = document.createElement("span");
                     icon.className = "icon";

@@ -27,7 +27,9 @@ module.exports = NodeHelper.create({
 	 * argument notification string - The identifier of the notification.
 	 * argument payload mixed - The payload of the notification.
 	 */
-	socketNotificationReceived: function(notification, payload) {
+    socketNotificationReceived: function (notification, payload) {
+        var self = this;
+
 		if (notification === "START") {
 			this.config = payload; // The payload is all of our configuration options
             console.log(notification + " received");
@@ -37,9 +39,13 @@ module.exports = NodeHelper.create({
                 this.pushBulletListener(this.config); // Start up the PushBullet listener
             }
 
-            if (this.config.showNotificationsOnLoad) {
-                this.loadPushes(this.pusher, this.config, true);
-            }
+            //Get devices first
+            this.getDevicesAsync(this.config, this.pusher).then(function (response) {
+                //Load pushes on start if we need to
+                if (self.config.showNotificationsOnLoad) {                
+                    self.loadPushes(self.pusher, self.config, true);                
+                }
+            });                
 		}
 	},
 
@@ -77,39 +83,26 @@ module.exports = NodeHelper.create({
     },
 
     loadPushes: function (pusher, config, init) {
-        var self = this;
-
-        //Check to see if we need to filter
-        if (config.showNotificationsSentToAllDevices && config.filterTargetDeviceName === "") {
-            //Get pushes of all devices directly
-            self.getPushesAsync(pusher, config, null).then(function (response) {
-                if (response != null && response.pushes != null && response.pushes.length > 0) {
-                    if (!init) {
-                        self.playSound(config);
-                    }
-
-                    //Sending pushes to mirror
-                    self.sendSocketNotification("PUSHES", response.pushes);
+        var self = this;                
+        
+        //Get pushes and filter out 'command pushes' and check if a target device filter is configured
+        self.getFilteredPushesAsync(pusher, config).then(function (result) {
+            if (result != null && result.length > 0) {
+                //Play a sound if we are not initiating
+                if (!init) {
+                    self.playSound(config);
                 }
-            });
-        }
-        else {
-            //Filter out pushes that do not belong to 'filterTargetDeviceName', check if we also need to add pushes sent to 'all devices'
-            self.getFilteredPushesAsync(pusher, config).then(function (result) {
-                if (result != null && result.length > 0) {
-                    if (!init) {
-                        self.playSound(config);
-                    }
 
-                    //Sending pushes to mirror
-                    self.sendSocketNotification("PUSHES", result);
-                }
-            });
-        }
+                //Sending pushes to mirror
+                self.sendSocketNotification("PUSHES", result);
+            }
+        });
+        
     },
 
     //Play sound
     playSound: function (config) {
+        //Play a sound if configured
         if (config.soundFile != null && config.playSoundOnNotificationReceived) {
             player.play(config.soundFile, function (err) {
                 if (err) console.log("Error:" + err);
@@ -161,14 +154,9 @@ module.exports = NodeHelper.create({
     
     //Get and filter pushes async
 	getFilteredPushesAsync: async function(pusher, config) {
-		var pushes = [];
-		var devices = [];
-		var cursor = null;
-
-		//Get devices if we need to filter
-		if(config.filterTargetDeviceName !== "") {
-			devices = await this.getDevicesAsync(config, pusher);
-		}
+        var self = this;
+        var pushes = [];		
+        var cursor = null;
 
 		//Max 3 fetch rounds
 		for(var i=0; i<3;i++) {
@@ -179,21 +167,16 @@ module.exports = NodeHelper.create({
 
                 //Command Magic Mirror
                 if (i == 0 && responsePushes[0].body.startsWith("mm:")) {
-                    this.executeCommand(config, devices, responsePushes[0]);
+                    this.executeCommand(config, self.devices, responsePushes[0]);
                     break;
                 }
 
-				//Do we need to filter?
-				if(config.filterTargetDeviceName !== "") {
-					responsePushes = this.filterPushes(config, response.pushes, devices);
-				}
+				//Filter pushes if we need to                
+                responsePushes = this.filterPushes(config, response.pushes, self.devices);				
 
 				//Add pushes to return array
-				responsePushes.forEach(function(p) {
-                    //Filter out command Magic Mirror
-                    if (!p.body.startsWith("mm:")) {
-                        pushes.push(p);
-                    }
+				responsePushes.forEach(function(p) {                                        
+                    pushes.push(p);                    
 				});
 
 				//Are there more pushes (cursor?) and do we need to fetch more pushes?
@@ -212,6 +195,7 @@ module.exports = NodeHelper.create({
 
     //Get pushes aync
 	getPushesAsync: async function(pusher, config, cursor) {
+        var self = this;
 
         //Set fetch limit
 		var fetchLimit = (config.fetchLimitPushBullet > 500) ? 500 : config.fetchLimitPushBullet;
@@ -238,8 +222,8 @@ module.exports = NodeHelper.create({
             if(error) {
                 console.log("Error fetching pushes. " + error);
             }
-
-			result = response;
+                        
+            result = response;
         });
 
 		return result;
@@ -248,7 +232,9 @@ module.exports = NodeHelper.create({
     //Filter pushes
     filterPushes: function(config, pushes, devices) {
         var filteredPushes = [];
+        var responsePushes = [];
 
+        //Get pushes that are sent to target device
         if(pushes.length > 0 && config.filterTargetDeviceName !== "") {
             var deviceIden = this.getDeviceIden(devices, config.filterTargetDeviceName);
 
@@ -269,9 +255,17 @@ module.exports = NodeHelper.create({
 		else {
 			//No pushes or filterTargetDeviceName
 			filteredPushes = pushes;
-		}
+        }
 
-		return filteredPushes;
+        //Filter out command pushes
+        filteredPushes.forEach(function (p) {
+            //Filter out command Magic Mirror
+            if (!p.body.startsWith("mm:")) {
+                responsePushes.push(p);
+            }
+        });
+
+        return responsePushes;
     },
 
     //Get device Iden based on device (nick)name
