@@ -162,8 +162,8 @@ module.exports = NodeHelper.create({
 		for(var i=0; i<3;i++) {
             var response = await this.getPushesAsync(pusher, config, cursor);
 
-            if(response != null && response.pushes != null) {
-				var responsePushes = response.pushes;
+            if (response != null && response.pushes != null && response.pushes.length > 0) {
+                var responsePushes = response.pushes;                
 
                 //Command Magic Mirror
                 if (i == 0 && responsePushes[0].body.startsWith("mm:")) {
