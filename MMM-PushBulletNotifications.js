@@ -9,12 +9,15 @@ Module.register("MMM-PushBulletNotifications", {
 	defaults: {
 		accessToken: "", //PushBullet API Access Token
 		numberOfNotifications: 3,
-		filterTargetDeviceName: "", //Only show notification send to all devices or the filterd target device
-        showNotificationsSentToAllDevices: true, //Show notifications to all devices
+		filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
+        showPushesSentToAllDevices: true, //Show pushes to all devices
         onlyAllowCommandsFromSourceDevices: [],
         fetchLimitPushBullet: 50,
-        showNotificationsOnLoad: true,
-        showDismissedPushes: false,
+        showPushes: true,
+        showPushesOnLoad: true,
+        showDismissedPushes: true,
+        showMirroredNotifications: true, 
+        showSMS: true,
         showMessage: true,
         showIcons: true,
         showDateTime: true,
@@ -24,6 +27,7 @@ Module.register("MMM-PushBulletNotifications", {
 		maxMsgCharacters: 50,
         maxHeaderCharacters: 32,
         hideModuleIfNoData: true,
+        debugMode: false,
     },
 
     requiresVersion: "2.3.1", // Minimum required version of MagicMirror
@@ -37,9 +41,9 @@ Module.register("MMM-PushBulletNotifications", {
 	start: function() {
 		console.log("PushBulletNotifications module started!");
 		
-		this.loaded = false;
-		this.sendSocketNotification("START", this.config);
-		//this.originalHeader = this.data.header;		
+        this.loaded = false;
+        this.debugMode = this.config.debugMode;
+		this.sendSocketNotification("START", this.config);		
 	},
 
 	getDom: function() {
@@ -76,8 +80,8 @@ Module.register("MMM-PushBulletNotifications", {
                 }                
 
 				// Determine if the header texts need truncating
-                if (header.length > this.config.maxHeaderCharacters) {
-                    header = header.substring(0, this.config.maxHeaderCharacters) + "...";
+                if (header.length > self.config.maxHeaderCharacters) {
+                    header = header.substring(0, self.config.maxHeaderCharacters) + "...";
 				}
 
 				var notificationWrapper = document.createElement("tr");
@@ -167,8 +171,8 @@ Module.register("MMM-PushBulletNotifications", {
 
                     // Determine if the message texts need truncating
                     var message = o.body;
-                    if (o.body.length > this.config.maxMsgCharacters) {
-                         message = o.body.substring(0, this.config.maxMsgCharacters) + "...";
+                    if (o.body.length > self.config.maxMsgCharacters) {
+                        message = o.body.substring(0, self.config.maxMsgCharacters) + "...";
                     }
 
 					bodyContentWrapper.className = "normal xsmall message";
@@ -200,8 +204,21 @@ Module.register("MMM-PushBulletNotifications", {
 
     setNotifications: function () {
         //Destructuring assignment - ES6
-        this.notifications = [...new Set([...this.pushes, ...this.ephemerals])]; //Merge two array remove duplicates
+        this.notifications = [...new Set([...this.pushes, ...this.ephemerals])]; //Merge two array's and remove duplicates
         this.notifications.sort(function (a, b) { return b.created - a.created }); //Sort date desc        
+    },
+
+    addNotification: function (notification) {
+        var self = this;        
+        for (var i = 0; i < self.ephemerals.length; i++) {
+            var ephemeral = self.ephemerals[i];
+            if (ephemeral.notification_id === notification.notification_id) {
+                self.ephemerals.splice(i, 1);
+                break;
+            }
+        }
+        
+        this.ephemerals.push(notification);        
     },
 
     removeNotification: function(dismissal) {
@@ -210,13 +227,13 @@ Module.register("MMM-PushBulletNotifications", {
             var ephemeral = self.ephemerals[i];
             if ((ephemeral.notification_id === dismissal.notification_id) || (dismissal.package_name === "sms" && ephemeral.type === "sms_changed")) {
                 self.ephemerals.splice(i, 1);
-                break;
+                //break;
             }
         }
     },
 
 	socketNotificationReceived: function (notification, payload) {
-        console.log(notification);
+        this.debug(notification);
         //Received pushes
 		if (notification === "PUSHES") {
 			if (payload) {				
@@ -232,7 +249,7 @@ Module.register("MMM-PushBulletNotifications", {
                 var now = new Date();
                 payload.created = now.getTime() / 1000; //seconds  	                
 
-                this.ephemerals.push(payload);
+                this.addNotification(payload);
                 this.setNotifications();
                 this.updateDom();
             }            
@@ -256,7 +273,6 @@ Module.register("MMM-PushBulletNotifications", {
             var push = payload;
             if (push.body.startsWith("mm:")) {
                 var command = push.body.substring(3);
-                console.log(command.toLowerCase().trim());
 
                 if (command.startsWith("say:")) {
                     var message = command.substring(4);
@@ -307,4 +323,10 @@ Module.register("MMM-PushBulletNotifications", {
         }
         return device;
     },
+
+    debug: function (message) {
+        if (this.debugMode) {
+            console.log(message);
+        }
+    }
 });

@@ -12,7 +12,12 @@ and the [Phone Notification Mirror](https://github.com/ronny3050/phone-notificat
 
 ### PushBullet
 This module uses PushBullet (https://www.npmjs.com/package/pushbullet). [PushBullet](https://www.pushbullet.com) can be installed on your phone or computer. 
-This module uses the [Realtime Event Stream](https://docs.pushbullet.com/#realtime-event-stream) with normal pushes (no ephemerals).
+This module uses the [Realtime Event Stream](https://docs.pushbullet.com/#realtime-event-stream) with normal pushes and [ephemerals](https://docs.pushbullet.com/#ephemerals). 
+
+From the Pushbullet API documentation:
+`You can send arbitrary JSON messages, called "ephemerals", to all devices on your account. Ephemerals are stored for a short period of time (if at all) and are sent directly to devices.`
+
+Note: if SMS mirroring is configured in Pushbullet always the last received SMS on the phone will be shown on the Magic Mirror. Earlier received SMS messages are automatically dismissed by Pushbullet.
 
 The PushBullet API documentation can be found here (https://docs.pushbullet.com/). To use the API you need an API Access Token. 
 This Access Token can be created in your PushBullet account under [settings](https://www.pushbullet.com/#settings). 
@@ -58,6 +63,8 @@ npm install
 ## Using the module
 
 To use this module, add it to the modules array in the `config/config.js` file:
+Only the AccessToken is required, other config properties can be left out and the defaults will be used.
+
 ````javascript
 modules: [
 	{
@@ -69,10 +76,14 @@ modules: [
 			accessToken: "", //PushBullet API Access Token
 			numberOfNotifications: 3,
 			filterTargetDeviceName: "",
-			showNotificationsSentToAllDevices: true,
+			showPushesSentToAllDevices: true,
 			onlyAllowCommandsFromSourceDevices: [],
 			fetchLimitPushBullet: 50,
-			showNotificationsOnLoad: true,
+			showPushes: true,
+			showPushesOnLoad: true,
+			showDismissedPushes: true,
+			showMirroredNotifications: true, 
+			showSMS: true,
 			showMessage: true,
 			showIcons: true,
 			showDateTime: true,
@@ -80,13 +91,18 @@ modules: [
 			playSoundOnNotificationReceived: true,
 			soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3',			
 			maxMsgCharacters: 50,
-			maxHeaderCharacters: 32
+			maxHeaderCharacters: 32,
+			hideModuleIfNoData: false,
+			debugMode: false,
 		}
 	}
 ]
 ````
 
 ## Configuration options
+
+Some configuration properties changed from v1.0.1 to v1.1.0
+- showNotificationsSentToAllDevices is renamed to showPushesSentToAllDevices
 
 The following properties can be configured:
 
@@ -107,7 +123,7 @@ The following properties can be configured:
 		</tr>		
 		<tr>
 			<td><code>numberOfNotifications</code></td>
-			<td>Integer value, the number of notifications to show on the Magic Mirror.<br />
+			<td>Integer value, the number of notifications to show on the Magic Mirror. This includes pushes and ephemerals (mirrored notifications and SMS)<br />
 				<br /><b>Example:</b> <code>5</code>
 				<br /><b>Default value:</b> <code>3</code>
 				<br />This value is <b>OPTIONAL</b>
@@ -115,15 +131,15 @@ The following properties can be configured:
 		</tr>      
 		<tr>
 			<td><code>filterTargetDeviceName</code></td>
-			<td>String value, only show notifications that are send to this PushBullet device.<br />
+			<td>String value, only show pushes that are send to this PushBullet device.<br />
 				<br /><b>Example:</b> <code>Magic Mirror</code>
 				<br /><b>Default value:</b> <code>empty string</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr> 
 		<tr>
-			<td><code>showNotificationsSentToAllDevices</code></td>
-			<td>Boolean value, show notifications to all devices in PushBullet (=true). This option is only used if the option 'filterTargetDeviceName' is filled in.<br />				
+			<td><code>showPushesSentToAllDevices</code></td>
+			<td>Boolean value, show pushes to all devices in PushBullet (=true). This option is only used if the option 'filterTargetDeviceName' is filled in.<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
 				<br />This value is <b>OPTIONAL</b>
@@ -131,7 +147,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>onlyAllowCommandsFromSourceDevices</code></td>
-			<td>Array value containing strings. If this array is empty commands from every device is allowed.<br />Each string should be the nickname of a PushBullet device. To get a list of devices from the API run the curl command: <code>curl --header 'Access-Token: <your_access_token_here>' https://api.pushbullet.com/v2/devices </code><br />
+			<td>Array value containing strings. If this array is empty commands (=pushes start with mm:) from every device is allowed.<br />Each string should be the nickname of a PushBullet device. To get a list of devices from the API run the curl command: <code>curl --header 'Access-Token: <your_access_token_here>' https://api.pushbullet.com/v2/devices </code><br />
 				<br />Commands should be prefixed with 'mm:'. A list of command currently supported.
 				<ul>
 					<li>mm:shutdown</li>
@@ -139,6 +155,7 @@ The following properties can be configured:
 					<li>mm:show all modules</li>
 					<li>mm:display off</li>
 					<li>mm:display on</li>
+					<li>mm:play sound</li>
 					<li>mm:say:Hello World (this requires that the <a href="https://github.com/fewieden/MMM-TTS">MMM-TTS</a> is installed)</li>
 				</ul>
 				<br /><b>Example:</b> <code>['MY-PC', 'My iPhone']</code>
@@ -148,20 +165,52 @@ The following properties can be configured:
 		</tr>
         <tr>
 			<td><code>fetchLimitPushBullet</code></td>
-			<td>Integer value, option to limit the number of notifications are fetched from PushBullet<br />
+			<td>Integer value, option to limit the number of pushes are fetched from PushBullet<br />
 				<br /><b>Example:</b> <code>20</code>
 				<br /><b>Default value:</b> <code>50</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>    
 		<tr>
-			<td><code>showNotificationsOnLoad</code></td>
-			<td>Boolean value, load notifications from PushBullet when this module is loaded (=true). Otherwise notifications are load when send to PushBullet<br />				
+			<td><code>showPushes</code></td>
+			<td>Boolean value, show normal pushes that are sent using Pushbullet app on phone or computer<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>  
+		<tr>
+			<td><code>showPushesOnLoad</code></td>
+			<td>Boolean value, load pushes from PushBullet when this module is loaded (=true). Otherwise pushes are loaded when the first push was sent with PushBullet after starting up the Magic Mirror<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>    
+		<tr>
+			<td><code>showDismissedPushes</code></td>
+			<td>Boolean value, pushes and ephemerals (mirrored notifications and SMS) can be dimissed. Ephemerals are always gone when dismissed. Pushes can be dismissed but are still available in history. Set this option to true if you want to load dismissed pushes. If this option is set to false the latest push is always shown (is similar to how ephemerals work)<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>  
+		<tr>
+			<td><code>showMirroredNotifications</code></td>
+			<td>Boolean value, show notifications that are mirrored from android devices (phone). Mirror Notifications are currently only supported on android devices by Pushbullet. Using mirrored notifications you can show e.g. e-mail, WhatsApp, Hangouts (etc.) notifications on your mirror (and notifications of many more apps that you enable mirrored notifications for)<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>  
+		<tr>
+			<td><code>showSMS</code></td>
+			<td>Boolean value, show SMS messages that are mirrored from your phone on the Magic Mirror (=true).<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>  
 		<tr>
 			<td><code>showMessage</code></td>
 			<td>Boolean value, show the PushBullet notification content<br />				
@@ -223,6 +272,22 @@ The following properties can be configured:
 			<td>String value, the maximum number of characters to show from the notification header. The header shows the sender's name.<br />
 				<br /><b>Example:</b> <code>20</code>
 				<br /><b>Default value:</b> <code>32</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>hideModuleIfNoData</code></td>
+			<td>Boolean value, hide the module if there are no notifications to show.<br />
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>false</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>debugMode</code></td>
+			<td>Boolean value, shows additional logging messages if set to true (e.g. when started with `npm start dev` or `node serveronly`).<br />
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>false</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
