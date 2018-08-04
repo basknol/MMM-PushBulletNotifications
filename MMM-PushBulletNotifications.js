@@ -14,6 +14,7 @@ Module.register("MMM-PushBulletNotifications", {
         onlyAllowCommandsFromSourceDevices: [],
         fetchLimitPushBullet: 50,
         showNotificationsOnLoad: true,
+        showDismissedPushes: false,
         showMessage: true,
         showIcons: true,
         showDateTime: true,
@@ -21,14 +22,17 @@ Module.register("MMM-PushBulletNotifications", {
         playSoundOnNotificationReceived: true,
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
 		maxMsgCharacters: 50,
-		maxHeaderCharacters: 32
+        maxHeaderCharacters: 32,
+        hideModuleIfNoData: true,
     },
 
     requiresVersion: "2.3.1", // Minimum required version of MagicMirror
 
-    //Keep track of devices and pushes
+    //Keep track of devices, pushes, ephemerals and notifications (=mix of pushes and ephemerals)
 	devices: [],
-	pushes: [],
+    pushes: [],
+    ephemerals: [],
+    notifications: [],
 
 	start: function() {
 		console.log("PushBulletNotifications module started!");
@@ -43,11 +47,33 @@ Module.register("MMM-PushBulletNotifications", {
 		wrapper.className = "small";
 		var self = this;
 
-		if (this.pushes.length > 0) {
+        if (this.notifications.length > 0) {
 
 			// Only display how many notifications are specified by the config
-            self.pushes.slice(0, this.config.numberOfNotifications).forEach(function (o) {                
-                var header = o.sender_name;
+            self.notifications.slice(0, this.config.numberOfNotifications).forEach(function (o) {                
+                var header;
+
+                switch (o.type.toLowerCase()) {
+                    //Normal push
+                    case "note":
+                        header = o.sender_name;
+                        break;
+
+                    //Mirrored notification
+                    case "mirror":
+                        header = o.application_name + " - " + o.title;
+                        break;
+
+                    //SMS
+                    case "sms_changed":
+                        header = "SMS: " + o.notifications[0].title;
+                        //Add body to object
+                        o.body = o.notifications[0].body;
+                        //Time received SMS
+                        o.created = o.notifications[0].timestamp;
+
+                        break;                    
+                }                
 
 				// Determine if the header texts need truncating
                 if (header.length > this.config.maxHeaderCharacters) {
@@ -60,40 +86,49 @@ Module.register("MMM-PushBulletNotifications", {
                 //Set icon
                 var icon = null;
                 if (self.config.showIcons) {   
-                    //Get device that has sent notification
-                    var device = self.getDevice(o.source_device_iden);
-                    var iconPath = "/modules/MMM-PushBulletNotifications/icons/";
-
-                    //Sometimes device is null because push does not contain a 'source_device_iden'
-                    if (device == null) {
-                        iconPath += 'message.png';
-                    }
-                    else {
-                        //Set icon based on device
-                        switch (device.icon) {
-                            case "phone":
-                                iconPath += 'phone.png';
-                                break;
-                            case "desktop":
-                                if (device.type == "windows") {
-                                    iconPath += 'windows.png';
-                                }
-                                else {
-                                    iconPath += 'desktop.png';
-                                }
-                                break;
-                            case "system":
-                                iconPath += 'system.png';
-                                break;
-                            default:
-                                iconPath += 'message.png';
-                                break;
-                        }
-                    }                    
-
                     icon = document.createElement("span");
                     icon.className = "icon";
-                    icon.innerHTML = "<img src=\"" + iconPath + "\" width=\"24\" />";
+
+                    //Normal push (decide what icon to use based on device) or SMS
+                    if (o.type === "note" || o.type === "sms_changed") {
+
+                        //Get device that has sent notification
+                        var device = self.getDevice(o.source_device_iden);
+                        var iconPath = "/modules/MMM-PushBulletNotifications/icons/";
+
+                        //Sometimes device is null because push does not contain a 'source_device_iden'
+                        if (device == null) {
+                            iconPath += 'message.png';
+                        }
+                        else {
+                            //Set icon based on device
+                            switch (device.icon) {
+                                case "phone":
+                                    iconPath += 'phone.png';
+                                    break;
+                                case "desktop":
+                                    if (device.type == "windows") {
+                                        iconPath += 'windows.png';
+                                    }
+                                    else {
+                                        iconPath += 'desktop.png';
+                                    }
+                                    break;
+                                case "system":
+                                    iconPath += 'system.png';
+                                    break;
+                                default:
+                                    iconPath += 'message.png';
+                                    break;
+                            }
+                        }
+
+                        icon.innerHTML = "<img src=\"" + iconPath + "\" width=\"24\" />";
+                    }
+                    else {
+                        //Show icon that was passed in notification (ephemeral) as base64
+                        icon.innerHTML = "<img src=\"data:image/png;base64, " + o.icon + "\" width=\"24\" />";
+                    }
                 }
 
                 //Name of sender
@@ -128,9 +163,16 @@ Module.register("MMM-PushBulletNotifications", {
                 //Shoge message
                 if (self.config.showMessage) {
 					var bodyWrapper = document.createElement("tr");
-                    var bodyContentWrapper = document.createElement("td");                    
+                    var bodyContentWrapper = document.createElement("td");  
+
+                    // Determine if the message texts need truncating
+                    var message = o.body;
+                    if (o.body.length > this.config.maxMsgCharacters) {
+                         message = o.body.substring(0, this.config.maxMsgCharacters) + "...";
+                    }
+
 					bodyContentWrapper.className = "normal xsmall message";
-                    bodyContentWrapper.innerHTML = o.body.substring(0, self.config.maxMsgCharacters);
+                    bodyContentWrapper.innerHTML = message;
 					bodyWrapper.appendChild(bodyContentWrapper);
 					wrapper.appendChild(bodyWrapper);
 				}
@@ -139,8 +181,8 @@ Module.register("MMM-PushBulletNotifications", {
             //Show module
 			self.show();
 		}
-        else {
-            //Hide module if we have no pushes to show
+        else if (this.config.hideModuleIfNoData) {
+            //Hide module if we have no notifications to show
 			self.hide();
 		}
 		return wrapper;
@@ -154,17 +196,53 @@ Module.register("MMM-PushBulletNotifications", {
 		return [
 			"MMM-PushBulletNotifications.css",
 		];
-	},
+    },
+
+    setNotifications: function () {
+        //Destructuring assignment - ES6
+        this.notifications = [...new Set([...this.pushes, ...this.ephemerals])]; //Merge two array remove duplicates
+        this.notifications.sort(function (a, b) { return b.created - a.created }); //Sort date desc        
+    },
+
+    removeNotification: function(dismissal) {
+        var self = this;
+        for (var i = 0; i < self.ephemerals.length; i++) {
+            var ephemeral = self.ephemerals[i];
+            if ((ephemeral.notification_id === dismissal.notification_id) || (dismissal.package_name === "sms" && ephemeral.type === "sms_changed")) {
+                self.ephemerals.splice(i, 1);
+                break;
+            }
+        }
+    },
 
 	socketNotificationReceived: function (notification, payload) {
         console.log(notification);
         //Received pushes
 		if (notification === "PUSHES") {
-			if (payload) {
-				this.loaded = true;
-				this.pushes = payload;				
-			}
-			this.updateDom();
+			if (payload) {				
+                this.pushes = payload;		
+                this.setNotifications();
+                this.updateDom();
+			}			
+        }
+        //Received Ephemeral (SMS or Mirrored Notifications)
+        else if (notification === "SMS" || notification === "MIRROR") {
+            if (payload) {                
+                //Add created date, not available in ephemeral
+                var now = new Date();
+                payload.created = now.getTime() / 1000; //seconds  	                
+
+                this.ephemerals.push(payload);
+                this.setNotifications();
+                this.updateDom();
+            }            
+        }
+        else if (notification === "DISMISSAL") {
+            if (payload) {
+                this.removeNotification(payload);
+                this.setNotifications();
+                this.updateDom();
+            }
         }
         //Received devices
 		else if(notification === "DEVICES") {

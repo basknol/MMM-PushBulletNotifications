@@ -73,12 +73,45 @@ module.exports = NodeHelper.create({
          * 
          * Watch for normal pushes not Ephemerals. Tickle means something has changed on server, subtype tells what has changed.
          */ 
-	    stream.on("tickle", function (type) {
+        stream.on("tickle", function (type) {            
             if (type === "push") {
                 self.loadPushes(self.pusher, config, false);
 		    }
-		});
+        });
 
+        /*
+         * Ephemerals
+         */ 
+        stream.on("push", function (push) {
+            console.log(push);
+            if (push.type === "mirror") {
+                console.log("Mirrored Notification received, sending to mirror");
+
+                self.playSound(config);
+
+                //Sending mirrored notification to mirror
+                self.sendSocketNotification("MIRROR", push);
+            }
+            else if (push.type === "sms_changed") {
+                console.log("SMS received, sending to mirror");
+
+                //Do we have the info to display the SMS inside notifications, otherwise ignore it. Sometimes empty, not sure why
+                if (push.notifications.length > 0) {
+                    self.playSound(config);
+
+                    //Sending SMS to mirror
+                    self.sendSocketNotification("SMS", push);
+                }
+            }
+            else if (push.type === "dismissal") {
+                console.log("Dismissal received, sending to mirror");
+
+                //Sending dismissal to mirror
+                self.sendSocketNotification("DISMISSAL", push);
+            }                        
+        });
+
+        //Connect the stream
         stream.connect();
     },
 
@@ -132,15 +165,6 @@ module.exports = NodeHelper.create({
 
                     //Send devices to mirror
                     self.sendSocketNotification("DEVICES", response.devices);
-
-                    //Add devices to array, filter if specified
-                    /*for (var i = 0; i < response.devices.length; i++) {
-                        var d = response.devices[i];
-                        if (d != null && config.filterTargetDeviceName.toLowerCase() === d.nickname.toLowerCase()) {
-                            devicesArr.push(d);
-                            break;
-                        }
-                    }*/
                 }
             });
         }
@@ -261,8 +285,18 @@ module.exports = NodeHelper.create({
         filteredPushes.forEach(function (p) {
             //Filter out command Magic Mirror
             if (!p.body.startsWith("mm:")) {
-                responsePushes.push(p);
-            }
+
+                //Do not show dismissed pushes if showDimissedPushes is set to false
+                if (!(!config.showDismissedPushes && p.dismissed)) {
+                    responsePushes.push(p);
+                }
+            }                        
+
+            //true false -> tonen
+            //true true -> tonen
+            //false true -> niet tonen
+            //false false -> tonen
+                         
         });
 
         return responsePushes;
