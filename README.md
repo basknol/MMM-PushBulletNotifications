@@ -6,7 +6,7 @@ Inspired by the [PushBulletNotes](https://github.com/maliciousbanjo/PushBulletNo
 and the [Phone Notification Mirror](https://github.com/ronny3050/phone-notification-mirror) module created by GitHub user [ronny3050](https://github.com/ronny3050)
 
 ![MagicMirror](https://github.com/basknol/MMM-PushBulletNotifications/blob/master/screenshots/MagicMirror.PNG)
-![Notifications](https://github.com/basknol/MMM-PushBulletNotifications/blob/master/screenshots/Notifications.PNG)
+![Notifications](https://github.com/basknol/MMM-PushBulletNotifications/blob/dev/screenshots/Notifications.PNG)
 
 ## Dependencies / Requirements
 
@@ -92,7 +92,8 @@ modules: [
 			soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3',			
 			maxMsgCharacters: 50,
 			maxHeaderCharacters: 32,
-			hideModuleIfNoData: false,
+			showModuleIfNoNotifications: true,
+			noNotificationsMessage: "No new notifications",
 			debugMode: false,
 		}
 	}
