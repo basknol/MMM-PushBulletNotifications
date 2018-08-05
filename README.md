@@ -103,6 +103,7 @@ modules: [
 
 Some configuration properties changed from v1.0.1 to v1.1.0
 - showNotificationsSentToAllDevices is renamed to showPushesSentToAllDevices
+- showNotificationsOnLoad is renamed to showPushesOnLoad
 
 The following properties can be configured:
 
@@ -276,10 +277,18 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
-			<td><code>hideModuleIfNoData</code></td>
-			<td>Boolean value, hide the module if there are no notifications to show.<br />
+			<td><code>showModuleIfNoNotifications</code></td>
+			<td>Boolean value, show (=true) or hide (=false) the module if there are no notifications to show.<br />
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
-				<br /><b>Default value:</b> <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>noNotificationsMessage</code></td>
+			<td>String value, the message to show if there are no new notifications and `showModuleIfNoNotifications` is set to true<br />
+				<br /><b>Example:</b> <code>You didn't miss a thing!</code>
+				<br /><b>Default value:</b> <code>No new notifications</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>

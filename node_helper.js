@@ -36,6 +36,19 @@ module.exports = NodeHelper.create({
             this.debugMode = this.config.debugMode;
             this.info(notification + " received");
 
+            //Check if old config values are used, log warning
+            if (!this.connected) {                
+                if (this.config.showNotificationsOnLoad !== undefined) {
+                    this.warning("[Obsolete] The configuration option 'showNotificationsOnLoad' is no longer used and renamed to 'showPushesOnLoad'");
+                    this.config.showPushesOnLoad = this.config.showNotificationsOnLoad;
+                }
+
+                if (this.config.showNotificationsSentToAllDevices !== undefined) {
+                    this.warning("[Obsolete] The configuration option 'showNotificationsSentToAllDevices' is no longer used and renamed to 'showPushesSentToAllDevices'");
+                    this.config.showPushesSentToAllDevices = this.config.showPushesSentToAllDevices;
+                }
+            }
+
             //Check to see if already conencted, to avoid multiple streams
             if (!this.connected) {
                 this.pushBulletListener(this.config); // Start up the PushBullet listener

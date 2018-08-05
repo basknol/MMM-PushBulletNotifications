@@ -26,7 +26,8 @@ Module.register("MMM-PushBulletNotifications", {
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
 		maxMsgCharacters: 50,
         maxHeaderCharacters: 32,
-        hideModuleIfNoData: true,
+        showModuleIfNoNotifications: true,
+        noNotificationsMessage: "No new notifications",
         debugMode: false,
     },
 
@@ -53,8 +54,8 @@ Module.register("MMM-PushBulletNotifications", {
 
         if (this.notifications.length > 0) {
 
-			// Only display how many notifications are specified by the config
-            self.notifications.slice(0, this.config.numberOfNotifications).forEach(function (o) {                
+            // Only display how many notifications are specified by the config
+            self.notifications.slice(0, this.config.numberOfNotifications).forEach(function (o) {
                 var header;
 
                 switch (o.type.toLowerCase()) {
@@ -76,20 +77,20 @@ Module.register("MMM-PushBulletNotifications", {
                         //Time received SMS
                         o.created = o.notifications[0].timestamp;
 
-                        break;                    
-                }                
+                        break;
+                }
 
-				// Determine if the header texts need truncating
+                // Determine if the header texts need truncating
                 if (header.length > self.config.maxHeaderCharacters) {
                     header = header.substring(0, self.config.maxHeaderCharacters) + "...";
-				}
+                }
 
-				var notificationWrapper = document.createElement("tr");
+                var notificationWrapper = document.createElement("tr");
                 notificationWrapper.className = "normal";
 
                 //Set icon
                 var icon = null;
-                if (self.config.showIcons) {   
+                if (self.config.showIcons) {
                     icon = document.createElement("span");
                     icon.className = "icon";
 
@@ -136,19 +137,19 @@ Module.register("MMM-PushBulletNotifications", {
                 }
 
                 //Name of sender
-				var nameWrapper = document.createElement("td");
+                var nameWrapper = document.createElement("td");
                 nameWrapper.className = "bright";
                 nameWrapper.innerHTML = (icon != null) ? icon.outerHTML + header : header;
 
-				notificationWrapper.appendChild(nameWrapper);
+                notificationWrapper.appendChild(nameWrapper);
                 wrapper.appendChild(notificationWrapper);
 
                 //Show date time with message
                 if (self.config.showDateTime) {
-                    var dateTimeWrapper = document.createElement("tr");                    
-                    var dateTimeContentWrapper = document.createElement("td");                    
+                    var dateTimeWrapper = document.createElement("tr");
+                    var dateTimeContentWrapper = document.createElement("td");
                     dateTimeContentWrapper.className = "normal xsmall";
-                                        
+
                     var date = new Date(o.created * 1000);
                     var dateTimeOptions = { hour12: false };
 
@@ -166,8 +167,8 @@ Module.register("MMM-PushBulletNotifications", {
 
                 //Shoge message
                 if (self.config.showMessage) {
-					var bodyWrapper = document.createElement("tr");
-                    var bodyContentWrapper = document.createElement("td");  
+                    var bodyWrapper = document.createElement("tr");
+                    var bodyContentWrapper = document.createElement("td");
 
                     // Determine if the message texts need truncating
                     var message = o.body;
@@ -175,20 +176,25 @@ Module.register("MMM-PushBulletNotifications", {
                         message = o.body.substring(0, self.config.maxMsgCharacters) + "...";
                     }
 
-					bodyContentWrapper.className = "normal xsmall message";
+                    bodyContentWrapper.className = "normal xsmall message";
                     bodyContentWrapper.innerHTML = message;
-					bodyWrapper.appendChild(bodyContentWrapper);
-					wrapper.appendChild(bodyWrapper);
-				}
-			});
+                    bodyWrapper.appendChild(bodyContentWrapper);
+                    wrapper.appendChild(bodyWrapper);
+                }
+            });
 
             //Show module
-			self.show();
-		}
-        else if (this.config.hideModuleIfNoData) {
+            self.show();
+        }
+        else if (!this.config.showModuleIfNoNotifications) {
             //Hide module if we have no notifications to show
-			self.hide();
-		}
+            self.hide();
+        }
+        else {
+            wrapper.innerHTML = this.translate(this.config.noNotificationsMessage);
+            wrapper.className = "normal xsmall dimmed";
+        }
+
 		return wrapper;
 	},
 
