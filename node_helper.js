@@ -17,6 +17,7 @@ module.exports = NodeHelper.create({
         this.pusher = null;
         this.connected = false;
         this.devices = [];
+        this.debugMode = false;
     },
 
     // Override socketNotificationReceived method.
@@ -31,8 +32,22 @@ module.exports = NodeHelper.create({
         var self = this;
 
 		if (notification === "START") {
-			this.config = payload; // The payload is all of our configuration options
-            console.log(notification + " received");
+            this.config = payload; // The payload is all of our configuration options
+            this.debugMode = this.config.debugMode;
+            this.info(notification + " received");
+
+            //Check if old config values are used, log warning
+            if (!this.connected) {                
+                if (this.config.showNotificationsOnLoad !== undefined) {
+                    this.warning("[Obsolete] The configuration option 'showNotificationsOnLoad' is no longer used and renamed to 'showPushesOnLoad'");
+                    this.config.showPushesOnLoad = this.config.showNotificationsOnLoad;
+                }
+
+                if (this.config.showNotificationsSentToAllDevices !== undefined) {
+                    this.warning("[Obsolete] The configuration option 'showNotificationsSentToAllDevices' is no longer used and renamed to 'showPushesSentToAllDevices'");
+                    this.config.showPushesSentToAllDevices = this.config.showPushesSentToAllDevices;
+                }
+            }
 
             //Check to see if already conencted, to avoid multiple streams
             if (!this.connected) {
@@ -42,7 +57,7 @@ module.exports = NodeHelper.create({
             //Get devices first
             this.getDevicesAsync(this.config, this.pusher).then(function (response) {
                 //Load pushes on start if we need to
-                if (self.config.showNotificationsOnLoad) {                
+                if (self.config.showPushesOnLoad) {                
                     self.loadPushes(self.pusher, self.config, true);                
                 }
             });                
@@ -58,27 +73,71 @@ module.exports = NodeHelper.create({
         //Connect
 		stream.on('connect', function() {
 			// stream has connected
-            console.log("PushBullet connected");
+            self.info("PushBullet connected");
             self.connected = true;
 		});
 
         //Logs errors
-        stream.on('error', function(error) {
-                console.log("Push stream error");
-                console.log(error);
+        stream.on('error', function (error) {
+            self.error("Push stream error: "+error);                
         });
 
-        /*PushBullet API
-         * https://docs.pushbullet.com/#realtime-event-stream
-         * 
-         * Watch for normal pushes not Ephemerals. Tickle means something has changed on server, subtype tells what has changed.
-         */ 
-	    stream.on("tickle", function (type) {
-            if (type === "push") {
-                self.loadPushes(self.pusher, config, false);
-		    }
-		});
+        //Watch for normal pushes if configured
+        if (config.showPushes) {
+            /*PushBullet API
+             * https://docs.pushbullet.com/#realtime-event-stream
+             * 
+             * Watch for normal pushes not Ephemerals. Tickle means something has changed on server, subtype tells what has changed.
+             */
+            stream.on("tickle", function (type) {
+                self.debug("tickle received: " + type);
+                if (type === "push") {
+                    self.loadPushes(self.pusher, config, false);
+                }
+            });
+        }
 
+        //Watch for mirrored notifications or SMS (ephemerals)
+        if (config.showMirroredNotifications || config.showSMS) {
+            /*
+             * Ephemerals
+             */
+            stream.on("push", function (push) {
+                self.json(push, "Ephemeral received");
+                if (push.type === "mirror" && config.showMirroredNotifications) {
+                    self.debug("Mirrored Notification received, sending to mirror");
+
+                    self.playSound(config);
+
+                    //Sending mirrored notification to mirror
+                    self.sendSocketNotification("MIRROR", push);
+                }
+                else if (push.type === "sms_changed" && config.showSMS) {
+                    self.debug("SMS received, sending to mirror");
+
+                    //Do we have the info to display the SMS inside notifications, otherwise ignore it. Sometimes empty, not sure why
+                    if (push.notifications.length > 0) {
+                        self.playSound(config);
+
+                        //Sending SMS to mirror
+                        self.sendSocketNotification("SMS", push);
+                    }
+                }
+                else if (push.type === "dismissal") {
+                    self.debug("Dismissal received, sending to mirror");
+
+                    //Sending dismissal to mirror
+                    self.sendSocketNotification("DISMISSAL", push);
+                }
+            });
+        }
+
+        //Show a warning if the config is probably not setup correctly
+        if (!config.showMirroredNotifications && !config.showSMS && !config.showPushes) {
+            self.warning("Please check the MMM-PushBulletNotifications module configuration. At least one of these properties must be set to true to be able to show notifications: showPushes, showMirroredNotifications or showSMS");
+        }
+
+        //Connect the stream
         stream.connect();
     },
 
@@ -86,7 +145,7 @@ module.exports = NodeHelper.create({
         var self = this;                
         
         //Get pushes and filter out 'command pushes' and check if a target device filter is configured
-        self.getFilteredPushesAsync(pusher, config).then(function (result) {
+        self.getFilteredPushesAsync(pusher, config, init).then(function (result) {
             if (result != null && result.length > 0) {
                 //Play a sound if we are not initiating
                 if (!init) {
@@ -102,10 +161,13 @@ module.exports = NodeHelper.create({
 
     //Play sound
     playSound: function (config) {
+        var self = this;
         //Play a sound if configured
         if (config.soundFile != null && config.playSoundOnNotificationReceived) {
             player.play(config.soundFile, function (err) {
-                if (err) console.log("Error:" + err);
+                if (err) {
+                    self.error("Play sound:" + err);
+                }
             });
         }
     },
@@ -124,7 +186,7 @@ module.exports = NodeHelper.create({
             //Get devices
             await pusher.devices(deviceOptions, function (error, response) {
                 if (error) {
-                    console.log("Error fetching devices. " + error);
+                    self.error("Error fetching devices. " + error);
                 }
                 else {
                     //Save devices
@@ -132,15 +194,6 @@ module.exports = NodeHelper.create({
 
                     //Send devices to mirror
                     self.sendSocketNotification("DEVICES", response.devices);
-
-                    //Add devices to array, filter if specified
-                    /*for (var i = 0; i < response.devices.length; i++) {
-                        var d = response.devices[i];
-                        if (d != null && config.filterTargetDeviceName.toLowerCase() === d.nickname.toLowerCase()) {
-                            devicesArr.push(d);
-                            break;
-                        }
-                    }*/
                 }
             });
         }
@@ -153,7 +206,7 @@ module.exports = NodeHelper.create({
 	},
     
     //Get and filter pushes async
-	getFilteredPushesAsync: async function(pusher, config) {
+	getFilteredPushesAsync: async function(pusher, config, init) {
         var self = this;
         var pushes = [];		
         var cursor = null;
@@ -165,8 +218,8 @@ module.exports = NodeHelper.create({
             if (response != null && response.pushes != null && response.pushes.length > 0) {
                 var responsePushes = response.pushes;                
 
-                //Command Magic Mirror
-                if (i == 0 && responsePushes[0].body.startsWith("mm:")) {
+                //Command Magic Mirror (execute if push starts with mm:)(do not execute on initializing, starting mirror)
+                if (!init && i == 0 && responsePushes[0].body.startsWith("mm:")) {
                     this.executeCommand(config, self.devices, responsePushes[0]);
                     break;
                 }
@@ -219,8 +272,8 @@ module.exports = NodeHelper.create({
 
         //Fetch pushes
         await pusher.history(historyOptions, function (error, response) {
-            if(error) {
-                console.log("Error fetching pushes. " + error);
+            if (error) {
+                self.error("Error fetching pushes. " + error);
             }
                         
             result = response;
@@ -241,14 +294,14 @@ module.exports = NodeHelper.create({
             if(deviceIden !== "") {
                 pushes.forEach(function (p) {
                     //Push is sent to specified target device  or sent to all devices (only when filter is specified)
-                    if((p.target_device_iden === deviceIden) || (p.target_device_iden == undefined && config.showNotificationsSentToAllDevices)) {
+                    if((p.target_device_iden === deviceIden) || (p.target_device_iden == undefined && config.showPushesSentToAllDevices)) {
                         filteredPushes.push(p);
                     }
                 });
             }
-			else {
-				console.log("Failed to get device based on config.filterTargetDeviceName with value: "+config.filterTargetDeviceName);
-				console.log("Cannot filter...returning all pushes");
+            else {
+                self.warning("Failed to get device based on config.filterTargetDeviceName with value: " + config.filterTargetDeviceName);
+				self.info("Cannot filter...returning all pushes");
 				filteredPushes = pushes;
 			}
         }
@@ -261,8 +314,12 @@ module.exports = NodeHelper.create({
         filteredPushes.forEach(function (p) {
             //Filter out command Magic Mirror
             if (!p.body.startsWith("mm:")) {
-                responsePushes.push(p);
-            }
+
+                //Do not show dismissed pushes if showDimissedPushes is set to false
+                if (!(!config.showDismissedPushes && p.dismissed)) {
+                    responsePushes.push(p);
+                }
+            }                                                 
         });
 
         return responsePushes;
@@ -297,9 +354,9 @@ module.exports = NodeHelper.create({
         }
 
         if (allow) {
+            self.info("Command received: " + push.body);
             var opts = { timeout: 15000 };
             var command = push.body.substring(3);
-            console.log(command.toLowerCase().trim());
 
             switch (command.toLowerCase().trim()) {
                 case "shutdown":
@@ -314,6 +371,14 @@ module.exports = NodeHelper.create({
                     exec("vcgencmd display_power 0", opts, function (error, stdout, stderr) { self.checkForExecError(error, stdout, stderr); });
                     break;
 
+                case "play sound":
+                    player.play(config.soundFile, function (err) {
+                        if (err) {
+                            self.error("Play sound:" + err);
+                        }
+                    });
+                    break;
+
                 default:
                     self.sendSocketNotification("COMMAND", push);
                     break;
@@ -322,11 +387,63 @@ module.exports = NodeHelper.create({
     },
 
     checkForExecError: function (error, stdout, stderr) {
-        console.log(stdout);
-        console.log(stderr);
+        this.debug(stdout);
+        if (stderr) {
+            this.error(stderr);
+        }
         if (error) {
-            console.log(error);
+            this.error(error);
             return;
         }
     },
+
+    /*Logging*/
+    json: function (json, message) {
+        if (message) {
+            this.log("debug", message);
+        }
+        this.log("json", json);        
+    },
+    debug: function (message) {        
+        this.log("debug", message);
+    },
+    info: function (message) {
+        this.log("info", message);
+    },
+    warning: function (message) {
+        this.log("warning", message);
+    },
+    error: function (message) {
+        this.log("error", message);
+    },
+    log: function (type, message) {                
+        var currentTime = new Date();
+        var now = currentTime.toLocaleTimeString('en-US', { hour12: false }) + "." + currentTime.getMilliseconds();
+        switch (type.toLowerCase()) {
+            case "json":
+                if (this.debugMode) {                    
+                    console.log(message);
+                }
+                break;
+            case "debug":
+                if (this.debugMode) {
+                    console.log("[Debug]" + now + " - " + message);
+                }
+                break;
+
+            default:
+            case "info":                
+                console.log("[Info]" + now + " - " + message);
+                break;
+
+            case "warning":                
+                console.log("[Warning]" + now + " - " + message);
+                break;
+
+            case "error":                
+                console.log("[Error]" + now + " - " + message);
+                break;            
+            
+        }                
+    }
 });
