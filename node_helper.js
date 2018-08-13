@@ -260,12 +260,7 @@ module.exports = NodeHelper.create({
             limit: fetchLimit, //max 500
         };
 
-		//Limit in API request if we have no device filter
-		if(config.filterTargetDeviceName === "") {
-            historyOptions.limit = config.numberOfNotifications;
-        }
-
-        //Add cursor if we have one to fetch more pushes
+        //Add cursor if we have one, to fetch more pushes
 		if(cursor != null) {
 			historyOptions.cursor = cursor;
         }

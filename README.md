@@ -154,7 +154,9 @@ The following properties can be configured:
 				<ul>
 					<li>mm:shutdown</li>
 					<li>mm:hide all modules</li>
+					<li>mm:hide module:&lt;modulename&gt;</li>
 					<li>mm:show all modules</li>
+					<li>mm:show module:&lt;modulename&gt;</li>
 					<li>mm:display off</li>
 					<li>mm:display on</li>
 					<li>mm:play sound</li>
