@@ -193,7 +193,7 @@ The following properties can be configured:
 		</tr>    
 		<tr>
 			<td><code>showDismissedPushes</code></td>
-			<td>Boolean value, pushes and ephemerals (mirrored notifications and SMS) can be dimissed. Ephemerals are always gone when dismissed. Pushes can be dismissed but are still available in history. Set this option to true if you want to load dismissed pushes. If this option is set to false the latest push is always shown (is similar to how ephemerals work)<br />				
+			<td>Boolean value, pushes and ephemerals (mirrored notifications and SMS) can be dimissed. Ephemerals are always gone when dismissed. Pushes can be dismissed but are still available in history. Set this option to true if you want to load dismissed pushes. If this option is set to false dismissed pushes are not shown.<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
 				<br />This value is <b>OPTIONAL</b>
