@@ -6,17 +6,19 @@
  */
 
 Module.register("MMM-PushBulletNotifications", {
-	defaults: {
-		accessToken: "", //PushBullet API Access Token
-		numberOfNotifications: 3,
-		filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
+    defaults: {
+        accessToken: "", //PushBullet API Access Token
+        numberOfNotifications: 3,
+        filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
         showPushesSentToAllDevices: true, //Show pushes to all devices
         onlyAllowCommandsFromSourceDevices: [],
         fetchLimitPushBullet: 50,
         showPushes: true,
         showPushesOnLoad: true,
         showDismissedPushes: true,
-        showMirroredNotifications: true, 
+        showMirroredNotifications: true,        
+        onlyShowLastNotificationFromApplication: false,
+        showIndividualNotifications: true,
         showSMS: true,
         showMessage: true,
         showIcons: true,
@@ -24,7 +26,7 @@ Module.register("MMM-PushBulletNotifications", {
         localesDateTime: 'nl-NL',
         playSoundOnNotificationReceived: true,
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
-		maxMsgCharacters: 50,
+        maxMsgCharacters: 50,
         maxHeaderCharacters: 32,
         showModuleIfNoNotifications: true,
         noNotificationsMessage: "No new notifications",
@@ -34,23 +36,23 @@ Module.register("MMM-PushBulletNotifications", {
     requiresVersion: "2.3.1", // Minimum required version of MagicMirror
 
     //Keep track of devices, pushes, ephemerals and notifications (=mix of pushes and ephemerals)
-	devices: [],
+    devices: [],
     pushes: [],
     ephemerals: [],
     notifications: [],
 
-	start: function() {
-		console.log("PushBulletNotifications module started!");
-		
+    start: function () {
+        console.log("PushBulletNotifications module started!");
+
         this.loaded = false;
         this.debugMode = this.config.debugMode;
-		this.sendSocketNotification("START", this.config);		
-	},
+        this.sendSocketNotification("START", this.config);
+    },
 
-	getDom: function() {
-		var wrapper = document.createElement("table");
-		wrapper.className = "small";
-		var self = this;
+    getDom: function () {
+        var wrapper = document.createElement("table");
+        wrapper.className = "small";
+        var self = this;
 
         if (this.notifications.length > 0) {
 
@@ -195,17 +197,17 @@ Module.register("MMM-PushBulletNotifications", {
             wrapper.className = "normal xsmall dimmed";
         }
 
-		return wrapper;
-	},
+        return wrapper;
+    },
 
-	getScripts: function() {
-		return [];
-	},
+    getScripts: function () {
+        return [];
+    },
 
-	getStyles: function () {
-		return [
-			"MMM-PushBulletNotifications.css",
-		];
+    getStyles: function () {
+        return [
+            "MMM-PushBulletNotifications.css",
+        ];
     },
 
     setNotifications: function () {
@@ -215,25 +217,29 @@ Module.register("MMM-PushBulletNotifications", {
     },
 
     addNotification: function (notification) {
-        var self = this;        
-        for (var i = 0; i < self.ephemerals.length; i++) {
-            var ephemeral = self.ephemerals[i];
-            if (ephemeral.notification_id === notification.notification_id) {
-                self.ephemerals.splice(i, 1);
-                break;
-            }
-        }
-        
-        this.ephemerals.push(notification);        
-    },
-
-    removeNotification: function(dismissal) {
         var self = this;
         for (var i = 0; i < self.ephemerals.length; i++) {
             var ephemeral = self.ephemerals[i];
-            if ((ephemeral.notification_id === dismissal.notification_id) || (dismissal.package_name === "sms" && ephemeral.type === "sms_changed")) {
+            //Clean up ephemarals if we have a duplicate
+            if ((ephemeral.package_name === notification.package_name && ephemeral.title === notification.title && ephemeral.body === notification.body) //Clean-up duplicates
+                || (ephemeral.package_name === notification.package_name && ephemeral.title === notification.title && !self.config.showIndividualNotifications) //Individual notifications
+                || (ephemeral.package_name === notification.package_name && self.config.onlyShowLastNotificationFromApplication)) { //Last notification from application
                 self.ephemerals.splice(i, 1);
-                //break;
+                i--;                
+            }
+        }
+
+        this.ephemerals.push(notification);    
+    },
+
+    removeNotification: function (dismissal) {
+        var self = this;
+        for (var i = 0; i < self.ephemerals.length; i++) {
+            var ephemeral = self.ephemerals[i];
+            if ((ephemeral.package_name === dismissal.package_name && ephemeral.notification_id === dismissal.notification_id && ephemeral.notification_tag === dismissal.notification_tag) 
+                || (dismissal.package_name === "sms" && ephemeral.type === "sms_changed")) {
+                self.ephemerals.splice(i, 1);
+                i--;                
             }
         }
     },

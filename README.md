@@ -83,6 +83,8 @@ modules: [
 			showPushesOnLoad: true,
 			showDismissedPushes: true,
 			showMirroredNotifications: true, 
+			onlyShowLastNotificationFromApplication: false,
+			showIndividualNotifications: false,
 			showSMS: true,
 			showMessage: true,
 			showIcons: true,
@@ -207,6 +209,22 @@ The following properties can be configured:
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>  
+		<tr>
+			<td><code>onlyShowLastNotificationFromApplication</code></td>
+			<td>Boolean value, only show the last notification from an application (=true). For example: only show the last received notification from WhatsApp regardless of the sender. If this setting is set to true the setting <code>showIndividualNotifications</code> is ignored.<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>false</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr> 
+		<tr>
+			<td><code>showIndividualNotifications</code></td>
+			<td>Boolean value, show all received notifications from an application (=true). For example: show all notifications from WhatsApp, also from the same sender. Set <code>onlyShowLastNotificationFromApplication</code> and this setting to false if you only want to show the last notification of a sender.<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>false</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr> 
 		<tr>
 			<td><code>showSMS</code></td>
 			<td>Boolean value, show SMS messages that are mirrored from your phone on the Magic Mirror (=true).<br />				
