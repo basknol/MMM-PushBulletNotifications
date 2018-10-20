@@ -154,7 +154,9 @@ The following properties can be configured:
 				<ul>
 					<li>mm:shutdown</li>
 					<li>mm:hide all modules</li>
+					<li>mm:hide module:&lt;modulename&gt;</li>
 					<li>mm:show all modules</li>
+					<li>mm:show module:&lt;modulename&gt;</li>
 					<li>mm:display off</li>
 					<li>mm:display on</li>
 					<li>mm:play sound</li>
@@ -191,7 +193,7 @@ The following properties can be configured:
 		</tr>    
 		<tr>
 			<td><code>showDismissedPushes</code></td>
-			<td>Boolean value, pushes and ephemerals (mirrored notifications and SMS) can be dimissed. Ephemerals are always gone when dismissed. Pushes can be dismissed but are still available in history. Set this option to true if you want to load dismissed pushes. If this option is set to false the latest push is always shown (is similar to how ephemerals work)<br />				
+			<td>Boolean value, pushes and ephemerals (mirrored notifications and SMS) can be dimissed. Ephemerals are always gone when dismissed. Pushes can be dismissed but are still available in history. Set this option to true if you want to load dismissed pushes. If this option is set to false dismissed pushes are not shown.<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
 				<br />This value is <b>OPTIONAL</b>

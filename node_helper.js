@@ -146,9 +146,9 @@ module.exports = NodeHelper.create({
         
         //Get pushes and filter out 'command pushes' and check if a target device filter is configured
         self.getFilteredPushesAsync(pusher, config, init).then(function (result) {
-            if (result != null && result.length > 0) {
-                //Play a sound if we are not initiating
-                if (!init) {
+            if (result != null) {
+                //Play a sound if we are not initiating and we have still pushes to show (=update) (otherwise sound is also played on dismiss of pushes)
+                if (!init && result.length > 0) {
                     self.playSound(config);
                 }
 
@@ -214,12 +214,13 @@ module.exports = NodeHelper.create({
 		//Max 3 fetch rounds
 		for(var i=0; i<3;i++) {
             var response = await this.getPushesAsync(pusher, config, cursor);
+            self.json(response, "Responses");
 
             if (response != null && response.pushes != null && response.pushes.length > 0) {
                 var responsePushes = response.pushes;                
 
                 //Command Magic Mirror (execute if push starts with mm:)(do not execute on initializing, starting mirror)
-                if (!init && i == 0 && responsePushes[0].body.startsWith("mm:")) {
+                if (!init && i == 0 && responsePushes[0].body != null && responsePushes[0].body.startsWith("mm:")) {
                     this.executeCommand(config, self.devices, responsePushes[0]);
                     break;
                 }
@@ -241,6 +242,10 @@ module.exports = NodeHelper.create({
                     break;
                 }
             }
+            else {
+                //No pushes...stop trying...
+                break;
+            }
 		}
 
 		return pushes;
@@ -260,12 +265,7 @@ module.exports = NodeHelper.create({
             limit: fetchLimit, //max 500
         };
 
-		//Limit in API request if we have no device filter
-		if(config.filterTargetDeviceName === "") {
-            historyOptions.limit = config.numberOfNotifications;
-        }
-
-        //Add cursor if we have one to fetch more pushes
+        //Add cursor if we have one, to fetch more pushes
 		if(cursor != null) {
 			historyOptions.cursor = cursor;
         }
@@ -313,11 +313,13 @@ module.exports = NodeHelper.create({
         //Filter out command pushes
         filteredPushes.forEach(function (p) {
             //Filter out command Magic Mirror
-            if (!p.body.startsWith("mm:")) {
+            if (p.type === 'note' && p.body != null && !p.body.startsWith("mm:")) { //For now only accept type 'note'. Type 'url' and 'file' not yet implemented
 
                 //Do not show dismissed pushes if showDimissedPushes is set to false
                 if (!(!config.showDismissedPushes && p.dismissed)) {
-                    responsePushes.push(p);
+                    if (p.active) { //Do not show deleted pushes
+                        responsePushes.push(p);
+                    }
                 }
             }                                                 
         });

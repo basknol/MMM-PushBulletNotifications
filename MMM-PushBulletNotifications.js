@@ -284,6 +284,14 @@ Module.register("MMM-PushBulletNotifications", {
                     var message = command.substring(4);
                     this.sendNotification('MMM-TTS', message);
                 }
+                else if (command.startsWith("hide module:")) {
+                    var module = command.substring(command.indexOf(":") + 1);
+                    this.setModuleVisibility(module, false);
+                }
+                else if (command.startsWith("show module:")) {
+                    var module = command.substring(command.indexOf(":") + 1);
+                    this.setModuleVisibility(module, true);
+                }
                 else {
                     switch (command.toLowerCase().trim()) {
 
@@ -306,6 +314,21 @@ Module.register("MMM-PushBulletNotifications", {
                 }
             }
         }
+    },
+
+    setModuleVisibility: function (moduleName, visible) {
+        var options = { lockString: this.identifier };
+        var modules = MM.getModules();
+        modules.enumerate(function (module) {
+            if (module.name === moduleName) {
+                if (visible) {
+                    module.show(1000, null, options);
+                }
+                else {
+                    module.hide(1000, null, options);
+                }
+            }
+        });
     },
 
     //Compare two date on same day
