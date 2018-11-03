@@ -18,7 +18,7 @@ Module.register("MMM-PushBulletNotifications", {
         showDismissedPushes: true,
         showMirroredNotifications: true,        
         onlyShowLastNotificationFromApplication: false,
-        showIndividualNotifications: true,
+        showIndividualNotifications: false,
         showSMS: true,
         showMessage: true,
         showIcons: true,
