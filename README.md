@@ -15,23 +15,27 @@ This module uses PushBullet (https://www.npmjs.com/package/pushbullet). [PushBul
 This module uses the [Realtime Event Stream](https://docs.pushbullet.com/#realtime-event-stream) with normal pushes and [ephemerals](https://docs.pushbullet.com/#ephemerals). 
 
 From the Pushbullet API documentation:
-`You can send arbitrary JSON messages, called "ephemerals", to all devices on your account. Ephemerals are stored for a short period of time (if at all) and are sent directly to devices.`
+- `You can send arbitrary JSON messages, called "ephemerals", to all devices on your account. Ephemerals are stored for a short period of time (if at all) and are sent directly to devices.`
+- `Mirrored notifications are notifications sent from android devices (currently the only source of mirrored notifications) to other devices`
 
-Note: if SMS mirroring is configured in Pushbullet always the last received SMS on the phone will be shown on the Magic Mirror. Earlier received SMS messages are automatically dismissed by Pushbullet.
+Note: 
+- if SMS mirroring is configured in Pushbullet always the last received SMS on the phone will be shown on the Magic Mirror. Earlier received SMS messages are automatically dismissed by PushBullet.
+- Limitation: on iOS/iPhone only pushes (messages) can be send using the PushBullet App, mirrored notifications only work on android devices.
 
 The PushBullet API documentation can be found here (https://docs.pushbullet.com/). To use the API you need an API Access Token. 
 This Access Token can be created in your PushBullet account under [settings](https://www.pushbullet.com/#settings). 
 The PushBullet API Access Token has to be set in the configuration for this module to work (see configuration options).
 
 #### Magic Mirror device
+The following step is optional and can be used for filtering purposes.
 Create 'Magic Mirror' as a device in PushBullet to be able to send messages to your Magic Mirror using this curl command:
 ````
-curl --header 'Access-Token: <your_access_token_here>'
-	 --header 'Content-Type: application/json'
-	 --data-binary '{"app_version":1,"manufacturer":"<your_name>","model":"Magic Mirror","nickname":"Magic Mirror","push_token":"","icon":"system"}' 
+curl --header 'Access-Token: <your_access_token_here>' \
+	 --header 'Content-Type: application/json' \
+	 --data-binary '{"app_version":1,"manufacturer":"<your_name>","model":"Magic Mirror","nickname":"Magic Mirror","push_token":"","icon":"system"}' \
 	 --request POST https://api.pushbullet.com/v2/devices
 ````
-Replace <your_access_token_here> with the Access Token created in PushBullet en replace <your_name> with your name.
+Replace <your_access_token_here> with the Access Token created in PushBullet en replace <your_name> with your name. This curl command can be executed from your raspberry pi terminal and a device will be added in PushBullet.
 
 This device can be set as filter (see configuration options) to show only notifications send to this device.
 
