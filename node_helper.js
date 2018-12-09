@@ -8,7 +8,8 @@
 var NodeHelper = require("node_helper");
 var PushBullet = require("pushbullet"); //https://www.npmjs.com/package/pushbullet
 var exec = require("child_process").exec;
-var player = require('play-sound')(opts = { players: ['omxplayer'] })
+var player = require('play-sound')(opts = { players: ['omxplayer'] });
+var https = require('https');
 
 module.exports = NodeHelper.create({
 
@@ -49,7 +50,7 @@ module.exports = NodeHelper.create({
                 }
             }
 
-            //Check to see if already conencted, to avoid multiple streams
+            //Check to see if already connected, to avoid multiple streams
             if (!this.connected) {
                 this.pushBulletListener(this.config); // Start up the PushBullet listener
             }
@@ -284,6 +285,7 @@ module.exports = NodeHelper.create({
 
     //Filter pushes
     filterPushes: function(config, pushes, devices) {
+        var self = this;
         var filteredPushes = [];
         var responsePushes = [];
 
@@ -321,7 +323,19 @@ module.exports = NodeHelper.create({
                         responsePushes.push(p);
                     }
                 }
-            }                                                 
+            }
+            else if (p.type === 'file' /*&& p.file_type.startsWith("image")*/) {
+                self.debug("Push with file received: " + p.file_name);
+
+                //Do not show dismissed pushes if showDimissedPushes is set to false
+                if (!(!config.showDismissedPushes && p.dismissed)) {
+                    if (p.active) { //Do not show deleted pushes
+
+                        //Send file payload to mirror
+                        self.sendSocketNotification('FILE', p);
+                    }
+                }
+            }
         });
 
         return responsePushes;
@@ -429,21 +443,21 @@ module.exports = NodeHelper.create({
                 break;
             case "debug":
                 if (this.debugMode) {
-                    console.log("[Debug]" + now + " - " + message);
+                    console.log("["+this.name+"][Debug] " + now + " - " + message);
                 }
                 break;
 
             default:
             case "info":                
-                console.log("[Info]" + now + " - " + message);
+                console.log("["+this.name+"][Info] " + now + " - " + message);
                 break;
 
             case "warning":                
-                console.log("[Warning]" + now + " - " + message);
+                console.log("["+this.name+"][Warning] " + now + " - " + message);
                 break;
 
             case "error":                
-                console.log("[Error]" + now + " - " + message);
+                console.log("["+this.name+"][Error] " + now + " - " + message);
                 break;            
             
         }                

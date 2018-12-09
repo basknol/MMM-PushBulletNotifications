@@ -254,6 +254,10 @@ Module.register("MMM-PushBulletNotifications", {
                 this.updateDom();
 			}			
         }
+        else if (notification === "FILE") {
+            //Notifiy other modules there is a PushBullet file upload
+            this.sendNotification("PUSHBULLET_FILE_UPLOAD", payload);
+        }
         //Received Ephemeral (SMS or Mirrored Notifications)
         else if (notification === "SMS" || notification === "MIRROR") {
             if (payload) {                
