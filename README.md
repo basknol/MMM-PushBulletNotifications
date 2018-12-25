@@ -278,6 +278,24 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
+			<td><code>audioPlayer</code></td>
+			<td>String value, fill in the audio player that should be used to play the sound.<br />				
+				<br /><b>Possible values:</b> 
+				<ul>
+					<li>mplayer</li>
+					<li>afplay</li>
+					<li>mpg123</li>
+					<li>mpg321</li>
+					<li>play</li>
+					<li>omxplayer</li>
+					<li>aplay</li>
+					<li>cmdmp3</li>
+				</ul>
+				<br /><b>Default value:</b> <code>omxplayer</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
 			<td><code>soundFile</code></td>
 			<td>String value, path to the sound file that has to be played when a notification is received.<br />
 				<br /><b>Example:</b> <code>'modules/MMM-PushBulletNotifications/sounds/new-message.mp3'</code>

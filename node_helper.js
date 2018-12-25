@@ -8,7 +8,7 @@
 var NodeHelper = require("node_helper");
 var PushBullet = require("pushbullet"); //https://www.npmjs.com/package/pushbullet
 var exec = require("child_process").exec;
-var player = require('play-sound')(opts = { players: ['omxplayer'] });
+var playSound = require('play-sound');
 var https = require('https');
 
 module.exports = NodeHelper.create({
@@ -18,6 +18,7 @@ module.exports = NodeHelper.create({
         this.pusher = null;
         this.connected = false;
         this.devices = [];
+        this.player = null;
         this.debugMode = false;
     },
 
@@ -48,6 +49,12 @@ module.exports = NodeHelper.create({
                     this.warning("[Obsolete] The configuration option 'showNotificationsSentToAllDevices' is no longer used and renamed to 'showPushesSentToAllDevices'");
                     this.config.showPushesSentToAllDevices = this.config.showPushesSentToAllDevices;
                 }
+            }
+
+            //Setup audio player
+            if (!this.connected && this.config.playSoundOnNotificationReceived) {
+                self.debug("Using '" + this.config.audioPlayer + "' as audio player");
+                this.player = new playSound(opts = { players: [this.config.audioPlayer] });
             }
 
             //Check to see if already connected, to avoid multiple streams
@@ -165,7 +172,7 @@ module.exports = NodeHelper.create({
         var self = this;
         //Play a sound if configured
         if (config.soundFile != null && config.playSoundOnNotificationReceived) {
-            player.play(config.soundFile, function (err) {
+            self.player.play(config.soundFile, function (err) {
                 if (err) {
                     self.error("Play sound:" + err);
                 }
@@ -388,11 +395,7 @@ module.exports = NodeHelper.create({
                     break;
 
                 case "play sound":
-                    player.play(config.soundFile, function (err) {
-                        if (err) {
-                            self.error("Play sound:" + err);
-                        }
-                    });
+                    self.playSound(config);
                     break;
 
                 default:

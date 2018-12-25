@@ -25,6 +25,7 @@ Module.register("MMM-PushBulletNotifications", {
         showDateTime: true,
         localesDateTime: 'nl-NL',
         playSoundOnNotificationReceived: true,
+        audioPlayer: 'omxplayer',
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
         maxMsgCharacters: 50,
         maxHeaderCharacters: 32,
