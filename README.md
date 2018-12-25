@@ -95,7 +95,9 @@ modules: [
 			showDateTime: true,
 			localesDateTime: 'nl-NL',
 			playSoundOnNotificationReceived: true,
-			soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3',			
+			audioPlayer: 'omxplayer',
+			soundsDirectory: 'modules/MMM-PushBulletNotifications/sounds', //Relative path to MagicMirror root
+			soundFile: 'new-message.mp3',			
 			maxMsgCharacters: 50,
 			maxHeaderCharacters: 32,
 			showModuleIfNoNotifications: true,
@@ -294,12 +296,21 @@ The following properties can be configured:
 				<br /><b>Default value:</b> <code>omxplayer</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
+		</tr>		
+		<tr>
+			<td><code>soundsDirectory</code></td>
+			<td>String value, path to the sounds directory that contains sound files like *.mp3, *.wav etc. This directory is used to search for specific application sounds.
+				<br />When a mirrored notification is received from WhatsApp it will look inside this directory for a lower case file name whatsapp (regardless of extension). The first found file will then be used (e.g. whatsapp.mp3)
+				<br /><b>Example:</b> <code>'modules/MMM-PushBulletNotifications/sounds'</code>
+				<br /><b>Default value:</b> <code>'modules/MMM-PushBulletNotifications/sounds'</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
 		</tr>
 		<tr>
 			<td><code>soundFile</code></td>
-			<td>String value, path to the sound file that has to be played when a notification is received.<br />
+			<td>String value, path (or filename in configured sounds directory) to the default sound file that has to be played when a notification is received.<br />
 				<br /><b>Example:</b> <code>'modules/MMM-PushBulletNotifications/sounds/new-message.mp3'</code>
-				<br /><b>Default value:</b> <code>'modules/MMM-PushBulletNotifications/sounds/new-message.mp3'</code>
+				<br /><b>Default value:</b> <code>'new-message.mp3'</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>

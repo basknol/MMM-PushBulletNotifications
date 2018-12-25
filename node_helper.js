@@ -10,6 +10,8 @@ var PushBullet = require("pushbullet"); //https://www.npmjs.com/package/pushbull
 var exec = require("child_process").exec;
 var playSound = require('play-sound');
 var https = require('https');
+var fs = require('fs');
+var path = require('path');
 
 module.exports = NodeHelper.create({
 
@@ -114,8 +116,9 @@ module.exports = NodeHelper.create({
                 self.json(push, "Ephemeral received");
                 if (push.type === "mirror" && config.showMirroredNotifications) {
                     self.debug("Mirrored Notification received, sending to mirror");
-
-                    self.playSound(config);
+                    
+                    //Add push to play a different sound based on application name
+                    self.playSound(config, push);
 
                     //Sending mirrored notification to mirror
                     self.sendSocketNotification("MIRROR", push);
@@ -168,15 +171,39 @@ module.exports = NodeHelper.create({
     },
 
     //Play sound
-    playSound: function (config) {
+    playSound: function (config, push) {
         var self = this;
-        //Play a sound if configured
-        if (config.soundFile != null && config.playSoundOnNotificationReceived) {
-            self.player.play(config.soundFile, function (err) {
-                if (err) {
-                    self.error("Play sound:" + err);
+        var soundFile = config.soundFile;
+
+        if (config.playSoundOnNotificationReceived) {
+            if (push != null && push.application_name != null) {
+                var app = push.application_name.toLowerCase();
+
+                self.debug("Searching for sound file '" + app + "' in directory '" + config.soundsDirectory + "'");
+
+                //Check if file exists based on filename regardless of extension                
+                var files = fs.readdirSync(config.soundsDirectory).filter(fn => fn.indexOf(app) > -1);
+                if (files != null && files.length > 0) {
+                    self.debug("Found " + files.length + " files, using the first: " + files[0]);
+                    soundFile = path.join(config.soundsDirectory, files[0]);
+                }            
+            }
+
+            //Play the sound (if configured)
+            if (soundFile != null) {
+                //Add sounds directory if we only have a file name
+                var pathObj = path.parse(soundFile);
+                if (pathObj.dir === '') {
+                    soundFile = path.join(config.soundsDirectory, soundFile);
                 }
-            });
+
+                self.debug("Playing sound file: " + soundFile);
+                self.player.play(soundFile, function (err) {
+                    if (err) {
+                        self.error("Play sound:" + err);
+                    }
+                });
+            }
         }
     },
 
@@ -230,7 +257,7 @@ module.exports = NodeHelper.create({
                 //Command Magic Mirror (execute if push starts with mm:)(do not execute on initializing, starting mirror)
                 if (!init && i == 0 && responsePushes[0].body != null && responsePushes[0].body.startsWith("mm:")) {
                     this.executeCommand(config, self.devices, responsePushes[0]);
-                    break;
+                    break; //Does this belong here?
                 }
 
 				//Filter pushes if we need to                
