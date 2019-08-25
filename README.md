@@ -246,6 +246,22 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
+			<td><code>cssGeneralClass</code></td>
+			<td>String value, change the look (e.g. size) of the header. Custom css can be added to the file MMM-PushBulletNotifications.css, specify the css class name in this property<br />				
+				<br /><b>Example values:</b> <code>xsmall, small, medium, large, xlarge</code> 
+				<br /><b>Default value:</b> <code>small</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>cssMessageClass</code></td>
+			<td>String value, change the look (e.g. size) of the message. Custom css can be added to the file MMM-PushBulletNotifications.css, specify the css class name in this property<br />				
+				<br /><b>Example values:</b> <code>xsmall, small, medium, large, xlarge</code> 
+				<br /><b>Default value:</b> <code>xsmall</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
 			<td><code>showIcons</code></td>
 			<td>Boolean value, show icon based on source device (desktop, phone, system icon)<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
@@ -254,10 +270,34 @@ The following properties can be configured:
 			</td>
 		</tr>
 		<tr>
+			<td><code>iconWidth</code></td>
+			<td>Integer value, the width of the icon.<br />
+				<br /><b>Example:</b> <code>36</code>
+				<br /><b>Default value:</b> <code>24</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>iconHeight</code></td>
+			<td>Integer value, the height of the icon.<br />
+				<br /><b>Example:</b> <code>36</code>
+				<br /><b>Default value:</b> <code>24</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
 			<td><code>showDateTime</code></td>
 			<td>Boolean value, show date and time of when notification was created<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>cssDateClass</code></td>
+			<td>String value, change the look (e.g. size) of the date time. Custom css can be added to the file MMM-PushBulletNotifications.css, specify the css class name in this property<br />				
+				<br /><b>Example values:</b> <code>xsmall, small, medium, large, xlarge</code> 
+				<br /><b>Default value:</b> <code>xsmall</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
@@ -287,7 +327,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>maxMsgCharacters</code></td>
-			<td>String value, the maximum number of characters to show from the notification body.<br />
+			<td>Integer value, the maximum number of characters to show from the notification body.<br />
 				<br /><b>Example:</b> <code>75</code>
 				<br /><b>Default value:</b> <code>50</code>
 				<br />This value is <b>OPTIONAL</b>
@@ -295,7 +335,7 @@ The following properties can be configured:
 		</tr>
 		<tr>
 			<td><code>maxHeaderCharacters</code></td>
-			<td>String value, the maximum number of characters to show from the notification header. The header shows the sender's name.<br />
+			<td>Integer value, the maximum number of characters to show from the notification header. The header shows the sender's name.<br />
 				<br /><b>Example:</b> <code>20</code>
 				<br /><b>Default value:</b> <code>32</code>
 				<br />This value is <b>OPTIONAL</b>
@@ -314,6 +354,14 @@ The following properties can be configured:
 			<td>String value, the message to show if there are no new notifications and `showModuleIfNoNotifications` is set to true<br />
 				<br /><b>Example:</b> <code>You didn't miss a thing!</code>
 				<br /><b>Default value:</b> <code>No new notifications</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>cssNoNotificationsMessageClass</code></td>
+			<td>String value, change the look (e.g. size) of the 'No notification message'. Custom css can be added to the file MMM-PushBulletNotifications.css, specify the css class name in this property<br />				
+				<br /><b>Example values:</b> <code>xsmall, small, medium, large, xlarge</code> 
+				<br /><b>Default value:</b> <code>xsmall</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>

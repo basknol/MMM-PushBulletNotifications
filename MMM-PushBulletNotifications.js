@@ -16,20 +16,26 @@ Module.register("MMM-PushBulletNotifications", {
         showPushes: true,
         showPushesOnLoad: true,
         showDismissedPushes: true,
-        showMirroredNotifications: true,        
+        showMirroredNotifications: true,
         onlyShowLastNotificationFromApplication: false,
         showIndividualNotifications: false,
         showSMS: true,
         showMessage: true,
+        cssGeneralClass: "small",
+        cssMessageClass: "xsmall",
         showIcons: true,
+        iconWidth: 24,
+        iconHeight: 24,
         showDateTime: true,
+        cssDateClass: "xsmall",
         localesDateTime: 'nl-NL',
         playSoundOnNotificationReceived: true,
         soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3', //Relative path to MagicMirror root
         maxMsgCharacters: 50,
         maxHeaderCharacters: 32,
         showModuleIfNoNotifications: true,
-        noNotificationsMessage: "No new notifications",
+        noNotificationsMessage: "No new notifications",                        
+        cssNoNotificationsMessageClass: "xsmall",
         debugMode: false,
     },
 
@@ -50,9 +56,9 @@ Module.register("MMM-PushBulletNotifications", {
     },
 
     getDom: function () {
-        var wrapper = document.createElement("table");
-        wrapper.className = "small";
         var self = this;
+        var wrapper = document.createElement("table");
+        wrapper.className = this.config.cssGeneralClass;        
 
         if (this.notifications.length > 0) {
 
@@ -95,6 +101,8 @@ Module.register("MMM-PushBulletNotifications", {
                 if (self.config.showIcons) {
                     icon = document.createElement("span");
                     icon.className = "icon";
+                    var imgWidth = self.config.iconWidth;
+                    var imgHeight = self.config.iconHeight;
 
                     //Normal push (decide what icon to use based on device) or SMS
                     if (o.type === "note" || o.type === "sms_changed") {
@@ -130,11 +138,11 @@ Module.register("MMM-PushBulletNotifications", {
                             }
                         }
 
-                        icon.innerHTML = "<img src=\"" + iconPath + "\" width=\"24\" />";
+                        icon.innerHTML = "<img src=\"" + iconPath + "\" width=\"" + imgWidth + "\" height=\"" + imgHeight + "\" />";
                     }
                     else {
                         //Show icon that was passed in notification (ephemeral) as base64
-                        icon.innerHTML = "<img src=\"data:image/png;base64, " + o.icon + "\" width=\"24\" />";
+                        icon.innerHTML = "<img src=\"data:image/png;base64, " + o.icon + "\" width=\"" + imgWidth + "\" height=\"" + imgHeight + "\" />";
                     }
                 }
 
@@ -150,7 +158,7 @@ Module.register("MMM-PushBulletNotifications", {
                 if (self.config.showDateTime) {
                     var dateTimeWrapper = document.createElement("tr");
                     var dateTimeContentWrapper = document.createElement("td");
-                    dateTimeContentWrapper.className = "normal xsmall";
+                    dateTimeContentWrapper.className = "normal " + self.config.cssDateClass;
 
                     var date = new Date(o.created * 1000);
                     var dateTimeOptions = { hour12: false };
@@ -178,7 +186,7 @@ Module.register("MMM-PushBulletNotifications", {
                         message = o.body.substring(0, self.config.maxMsgCharacters) + "...";
                     }
 
-                    bodyContentWrapper.className = "normal xsmall message";
+                    bodyContentWrapper.className = "normal message " + self.config.cssMessageClass;
                     bodyContentWrapper.innerHTML = message;
                     bodyWrapper.appendChild(bodyContentWrapper);
                     wrapper.appendChild(bodyWrapper);
@@ -194,7 +202,7 @@ Module.register("MMM-PushBulletNotifications", {
         }
         else {
             wrapper.innerHTML = this.translate(this.config.noNotificationsMessage);
-            wrapper.className = "normal xsmall dimmed";
+            wrapper.className = "normal dimmed " + this.config.cssNoNotificationsMessageClass;
         }
 
         return wrapper;
@@ -225,34 +233,34 @@ Module.register("MMM-PushBulletNotifications", {
                 || (ephemeral.package_name === notification.package_name && ephemeral.title === notification.title && !self.config.showIndividualNotifications) //Individual notifications
                 || (ephemeral.package_name === notification.package_name && self.config.onlyShowLastNotificationFromApplication)) { //Last notification from application
                 self.ephemerals.splice(i, 1);
-                i--;                
+                i--;
             }
         }
 
-        this.ephemerals.push(notification);    
+        this.ephemerals.push(notification);
     },
 
     removeNotification: function (dismissal) {
         var self = this;
         for (var i = 0; i < self.ephemerals.length; i++) {
             var ephemeral = self.ephemerals[i];
-            if ((ephemeral.package_name === dismissal.package_name && ephemeral.notification_id === dismissal.notification_id && ephemeral.notification_tag === dismissal.notification_tag) 
+            if ((ephemeral.package_name === dismissal.package_name && ephemeral.notification_id === dismissal.notification_id && ephemeral.notification_tag === dismissal.notification_tag)
                 || (dismissal.package_name === "sms" && ephemeral.type === "sms_changed")) {
                 self.ephemerals.splice(i, 1);
-                i--;                
+                i--;
             }
         }
     },
 
-	socketNotificationReceived: function (notification, payload) {
+    socketNotificationReceived: function (notification, payload) {
         this.debug(notification);
         //Received pushes
-		if (notification === "PUSHES") {
-			if (payload) {				
-                this.pushes = payload;		
+        if (notification === "PUSHES") {
+            if (payload) {
+                this.pushes = payload;
                 this.setNotifications();
                 this.updateDom();
-			}			
+            }
         }
         else if (notification === "FILE") {
             //Notifiy other modules there is a PushBullet file upload
@@ -260,7 +268,7 @@ Module.register("MMM-PushBulletNotifications", {
         }
         //Received Ephemeral (SMS or Mirrored Notifications)
         else if (notification === "SMS" || notification === "MIRROR") {
-            if (payload) {                
+            if (payload) {
                 //Add created date, not available in ephemeral
                 var now = new Date();
                 payload.created = now.getTime() / 1000; //seconds  	                
@@ -268,7 +276,7 @@ Module.register("MMM-PushBulletNotifications", {
                 this.addNotification(payload);
                 this.setNotifications();
                 this.updateDom();
-            }            
+            }
         }
         else if (notification === "DISMISSAL") {
             if (payload) {
@@ -278,11 +286,11 @@ Module.register("MMM-PushBulletNotifications", {
             }
         }
         //Received devices
-		else if(notification === "DEVICES") {
-			if(payload) {
-				this.loaded = true;
-				this.devices = payload;
-			}
+        else if (notification === "DEVICES") {
+            if (payload) {
+                this.loaded = true;
+                this.devices = payload;
+            }
         }
         //Commands
         else if (notification === "COMMAND") {
@@ -349,12 +357,12 @@ Module.register("MMM-PushBulletNotifications", {
     },
 
     //Get pushbullet device base on device iden
-    getDevice: function (deviceIden) {      
+    getDevice: function (deviceIden) {
         var device = null;
         if (this.devices != null && this.devices.length > 0 && deviceIden !== "") {
             for (var i = 0; i < this.devices.length; i++) {
                 var d = this.devices[i];
-                if (d != null && d.iden === deviceIden) { 
+                if (d != null && d.iden === deviceIden) {
                     device = d;
                     break;
                 }
