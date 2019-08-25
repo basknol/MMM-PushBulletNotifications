@@ -91,8 +91,13 @@ modules: [
 			showIndividualNotifications: false,
 			showSMS: true,
 			showMessage: true,
+			cssGeneralClass: "small",
+			cssMessageClass: "xsmall",
 			showIcons: true,
+			iconWidth: 24,
+			iconHeight: 24,
 			showDateTime: true,
+			cssDateClass: "xsmall",
 			localesDateTime: 'nl-NL',
 			playSoundOnNotificationReceived: true,
 			soundFile: 'modules/MMM-PushBulletNotifications/sounds/new-message.mp3',			
@@ -100,6 +105,7 @@ modules: [
 			maxHeaderCharacters: 32,
 			showModuleIfNoNotifications: true,
 			noNotificationsMessage: "No new notifications",
+			cssNoNotificationsMessageClass: "xsmall",
 			debugMode: false,
 		}
 	}
