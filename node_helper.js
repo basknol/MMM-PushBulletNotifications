@@ -71,7 +71,9 @@ module.exports = NodeHelper.create({
         const self = this;
         this.pusher.me(function(error, user) {
             // needed to call me() to gather user iden
-            self.pusher.enableEncryption(config.endToEndPassword, user.iden);
+            if (config.endToEndPassword !== null) {
+                self.pusher.enableEncryption(config.endToEndPassword, user.iden);
+            }
 
             const stream = self.pusher.stream();
 
