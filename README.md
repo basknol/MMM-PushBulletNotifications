@@ -78,6 +78,7 @@ modules: [
 		config: {
 			// See 'Configuration options' for more information.
 			accessToken: "", //PushBullet API Access Token
+			endToEndPassword: null,
 			numberOfNotifications: 3,
 			filterTargetDeviceName: "",
 			showPushesSentToAllDevices: true,
@@ -129,6 +130,12 @@ The following properties can be configured:
 				<br />This value is <b>REQUIRED</b>
 			</td>
 		</tr>		
+		<tr>
+			<td><code>endToEndPassword</code></td>
+			<td>PushBullet End-To-End encryption password. This must be the same as on the sender device.<br />				
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>	
 		<tr>
 			<td><code>numberOfNotifications</code></td>
 			<td>Integer value, the number of notifications to show on the Magic Mirror. This includes pushes and ephemerals (mirrored notifications and SMS)<br />
