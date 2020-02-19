@@ -10,7 +10,10 @@ Module.register("MMM-PushBulletNotifications", {
         accessToken: "", //PushBullet API Access Token
         numberOfNotifications: 3,
         filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
-        showPushesSentToAllDevices: true, //Show pushes to all devices
+        filterTargetDeviceNameMode: "strict", //strict or simple
+        filterBySenders: [],
+        //filterBySendersMode: "strict", //strict or simple
+        //showPushesSentToAllDevices: true, //Show pushes to all devices
         onlyAllowCommandsFromSourceDevices: [],
         fetchLimitPushBullet: 50,
         showPushes: true,
@@ -80,6 +83,11 @@ Module.register("MMM-PushBulletNotifications", {
                         o.created = o.notifications[0].timestamp;
 
                         break;
+
+                    //Link
+                    case "link":
+                        header = o.sender_name + " - " + o.title;
+                        break;
                 }
 
                 // Determine if the header texts need truncating
@@ -97,7 +105,7 @@ Module.register("MMM-PushBulletNotifications", {
                     icon.className = "icon";
 
                     //Normal push (decide what icon to use based on device) or SMS
-                    if (o.type === "note" || o.type === "sms_changed") {
+                    if (o.type === "note" || o.type === "sms_changed" || o.type === "link") {
 
                         //Get device that has sent notification
                         var device = self.getDevice(o.source_device_iden);

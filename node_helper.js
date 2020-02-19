@@ -290,13 +290,19 @@ module.exports = NodeHelper.create({
         var responsePushes = [];
 
         //Get pushes that are sent to target device
-        if(pushes.length > 0 && config.filterTargetDeviceName !== "") {
+        if (pushes.length > 0 && config.filterTargetDeviceName !== "") {
+            self.debug("Filtering by target device name specified in config: " + config.filterTargetDeviceName);
             var deviceIden = this.getDeviceIden(devices, config.filterTargetDeviceName);
 
             if(deviceIden !== "") {
                 pushes.forEach(function (p) {
-                    //Push is sent to specified target device  or sent to all devices (only when filter is specified)
-                    if((p.target_device_iden === deviceIden) || (p.target_device_iden == undefined && config.showPushesSentToAllDevices)) {
+                    //Push is sent to specified target device or sent to all devices (only when filter is specified)
+                    if ((p.target_device_iden === deviceIden)                     
+                        || (p.target_device_iden == undefined && config.showPushesSentToAllDevices && config.filterTargetDeviceNameMode === "strict")) {                        
+                            filteredPushes.push(p);
+                    }
+                    //Only filter if on target device name if push contains info about devices
+                    else if (p.target_device_iden == null && config.filterTargetDeviceNameMode === "simple") {
                         filteredPushes.push(p);
                     }
                 });
@@ -307,15 +313,39 @@ module.exports = NodeHelper.create({
 				filteredPushes = pushes;
 			}
         }
-		else {
-			//No pushes or filterTargetDeviceName
-			filteredPushes = pushes;
+        else
+        {
+            //No pushes or filterTargetDeviceName
+            filteredPushes = pushes;
+        }
+
+        //Filter pushes by senders name
+        if (filteredPushes.length > 0 && config.filterBySenders.length > 0) {
+            self.debug("Filtering by senders specified in config...");
+            var filteredPushesBySender = [];
+            filteredPushes.forEach(function (p) {
+                for (var i = 0; i < config.filterBySenders.length; i++) {
+                    var s = config.filterBySenders[i];                    
+                    //Check if push is from specific sender
+                    if (s != null && p.sender_name != null && s.toLowerCase() === p.sender_name.toLowerCase()) {  //case insensitive compare
+                        //Add push to filteredPushesBySender list
+                        filteredPushesBySender.push(p);
+                    }
+                    //Only filter on sender name if push contains info about the sender
+                    /*else if (p.sender_name == null && config.filterBySendersMode === "simple") {
+                        filteredPushesBySender.push(p);
+                    }*/
+                }
+            });
+
+            //Set filteredPushes
+            filteredPushes = filteredPushesBySender;
         }
 
         //Filter out command pushes
         filteredPushes.forEach(function (p) {
             //Filter out command Magic Mirror
-            if (p.type === 'note' && p.body != null && !p.body.startsWith("mm:")) { //For now only accept type 'note'. Type 'url' and 'file' not yet implemented
+            if (p.type === 'note' && p.body != null && !p.body.startsWith("mm:")) { //For now only accept type 'note'.
 
                 //Do not show dismissed pushes if showDimissedPushes is set to false
                 if (!(!config.showDismissedPushes && p.dismissed)) {
@@ -333,6 +363,14 @@ module.exports = NodeHelper.create({
 
                         //Send file payload to mirror
                         self.sendSocketNotification('FILE', p);
+                    }
+                }
+            }
+            else if (p.type === 'link' && p.body != null) {
+                //Do not show dismissed pushes if showDimissedPushes is set to false
+                if (!(!config.showDismissedPushes && p.dismissed)) {
+                    if (p.active) { //Do not show deleted pushes
+                        responsePushes.push(p);
                     }
                 }
             }
