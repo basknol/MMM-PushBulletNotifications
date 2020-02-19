@@ -81,7 +81,7 @@ modules: [
 			endToEndPassword: null,
 			numberOfNotifications: 3,
 			filterTargetDeviceName: "",
-			filterTargetDeviceNameMode: "strict",
+			filterTargetDeviceNameMode: "simple",
 			filterBySenders: [],  
 			showPushesSentToAllDevices: true,
 			onlyAllowCommandsFromSourceDevices: [],

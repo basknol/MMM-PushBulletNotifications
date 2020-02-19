@@ -11,7 +11,7 @@ Module.register("MMM-PushBulletNotifications", {
         endToEndPassword: null,
         numberOfNotifications: 3,
         filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
-        filterTargetDeviceNameMode: "strict", //strict or simple
+        filterTargetDeviceNameMode: "simple", //strict or simple
         filterBySenders: [],        
         showPushesSentToAllDevices: true, //Show pushes to all devices
         onlyAllowCommandsFromSourceDevices: [],
