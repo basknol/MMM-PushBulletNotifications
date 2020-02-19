@@ -303,14 +303,13 @@ module.exports = NodeHelper.create({
 
             if(deviceIden !== "") {
                 pushes.forEach(function (p) {
-                    //Push is sent to specified target device or sent to all devices (only when filter is specified)
-                    if ((p.target_device_iden === deviceIden)                     
-                        || (p.target_device_iden == undefined && config.showPushesSentToAllDevices && config.filterTargetDeviceNameMode === "strict")) {                        
+                    //Push is sent to specified target device 
+                    if ((p.target_device_iden === deviceIden)
+                        //Add pushes sent to all devices -> detect using p.direction === self
+                        || (p.target_device_iden == null && config.showPushesSentToAllDevices && p.direction === "self") 
+                        //Add pushes from channels (detect using p.direction !== self) in simple mode if there is no device info                     
+                        || (p.target_device_iden == null && config.filterTargetDeviceNameMode === "simple" && p.direction !== "self")) {                                                 
                             filteredPushes.push(p);
-                    }
-                    //Only filter if on target device name if push contains info about devices
-                    else if (p.target_device_iden == null && config.filterTargetDeviceNameMode === "simple") {
-                        filteredPushes.push(p);
                     }
                 });
             }
@@ -338,10 +337,6 @@ module.exports = NodeHelper.create({
                         //Add push to filteredPushesBySender list
                         filteredPushesBySender.push(p);
                     }
-                    //Only filter on sender name if push contains info about the sender
-                    /*else if (p.sender_name == null && config.filterBySendersMode === "simple") {
-                        filteredPushesBySender.push(p);
-                    }*/
                 }
             });
 

@@ -81,6 +81,8 @@ modules: [
 			endToEndPassword: null,
 			numberOfNotifications: 3,
 			filterTargetDeviceName: "",
+			filterTargetDeviceNameMode: "strict",
+			filterBySenders: [],  
 			showPushesSentToAllDevices: true,
 			onlyAllowCommandsFromSourceDevices: [],
 			fetchLimitPushBullet: 50,
@@ -149,6 +151,22 @@ The following properties can be configured:
 			<td>String value, only show pushes that are send to this PushBullet device.<br />
 				<br /><b>Example:</b> <code>Magic Mirror</code>
 				<br /><b>Default value:</b> <code>empty string</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr> 
+		<tr>
+			<td><code>filterTargetDeviceNameMode</code></td>
+			<td>String value, filter mode if filtering on device name is active. This option is only used if the option 'filterTargetDeviceName' is filled in. <br />Strict mode filters out all pushes that do no match <code>filterTargetDeviceName</code> and that do not contain any device information. Simple mode filters out pushes that do not match <code>filterTargetDeviceName</code>, but does not filter pushes that do not contain device information<br />
+				<br /><b>Example:</b> <code>strict</code> or <code>simple</code>
+				<br /><b>Default value:</b> <code>simple</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr> 
+		<tr>
+			<td><code>filterBySenders</code></td>
+			<td>Array containing strings, only show pushes from senders specified in the array. No filtering is done if array is empty<br />
+				<br /><b>Example:</b> <code>['IFTTT', 'Android']</code>
+				<br /><b>Default value:</b> empty array <code>[]</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr> 
