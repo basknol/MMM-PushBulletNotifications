@@ -8,6 +8,7 @@
 Module.register("MMM-PushBulletNotifications", {
     defaults: {
         accessToken: "", //PushBullet API Access Token
+        endToEndPassword: null,
         numberOfNotifications: 3,
         filterTargetDeviceName: "", //Only show pushes send to all devices or the filterd target device
         filterTargetDeviceNameMode: "strict", //strict or simple
