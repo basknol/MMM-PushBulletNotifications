@@ -25,6 +25,7 @@ Module.register("MMM-PushBulletNotifications", {
         showSMS: true,
         showMessage: true,
         showIcons: true,
+        showMessageCount: false,
         showDateTime: true,
         localesDateTime: 'nl-NL',
         playSoundOnNotificationReceived: true,
@@ -58,6 +59,20 @@ Module.register("MMM-PushBulletNotifications", {
         var self = this;
 
         if (this.notifications.length > 0) {
+
+            if(self.config.showMessageCount) {
+                var iconCountWrapper = document.createElement("tr");
+                var iconCountContentWrapper = document.createElement("td");                                       
+                iconCountWrapper.className = "normal";
+                    
+                var iconCountPath = '/modules/MMM-PushBulletNotifications/icons/pushbullet.png';
+                var iconMessageCount = document.createElement("span");
+                iconMessageCount.innerHTML = "<img src=\"" + iconCountPath + "\" width=\"24\" /<div class=\"count\">"+this.notifications.length+"</div>";
+                    
+                iconCountContentWrapper.appendChild(iconMessageCount);
+                iconCountWrapper.appendChild(iconCountContentWrapper);
+                wrapper.appendChild(iconCountWrapper);                    
+            }
 
             // Only display how many notifications are specified by the config
             self.notifications.slice(0, this.config.numberOfNotifications).forEach(function (o) {
@@ -94,7 +109,7 @@ Module.register("MMM-PushBulletNotifications", {
                 if (header.length > self.config.maxHeaderCharacters) {
                     header = header.substring(0, self.config.maxHeaderCharacters) + "...";
                 }
-
+                                
                 var notificationWrapper = document.createElement("tr");
                 notificationWrapper.className = "normal";
 

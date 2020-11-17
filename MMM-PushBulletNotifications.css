@@ -20,6 +20,24 @@
     transform: translate(0, 5px);
 }
 
+.count {
+    position: relative;
+    display: inline-block;
+    background: rgb(232,88,69);
+    height: 16px;
+    width: 16px;
+    font-size: x-small;
+    font-weight: bold;
+    top: 2px;
+    right: 8px;
+    text-align: center;
+    line-height: 16px;
+    border-radius: 20%;
+    color: white;
+    border: 1.5px solid darkslategray;
+    z-index: 1000;
+}
+
 td {
     padding-left: 5px;
 }
