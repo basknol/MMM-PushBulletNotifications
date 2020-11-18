@@ -23,6 +23,7 @@ Module.register("MMM-PushBulletNotifications", {
         onlyShowLastNotificationFromApplication: false,
         showIndividualNotifications: false,
         showSMS: true,
+        showNameOfSender: true,
         showMessage: true,
         showIcons: true,
         showMessageCount: false,
@@ -67,7 +68,7 @@ Module.register("MMM-PushBulletNotifications", {
                     
                 var iconCountPath = '/modules/MMM-PushBulletNotifications/icons/pushbullet.png';
                 var iconMessageCount = document.createElement("span");
-                iconMessageCount.innerHTML = "<img src=\"" + iconCountPath + "\" width=\"24\" /<div class=\"count\">"+this.notifications.length+"</div>";
+                iconMessageCount.innerHTML = "<img src=\"" + iconCountPath + "\" width=\"24\" /><div class=\"count\">"+this.notifications.length+"</div>";
                     
                 iconCountContentWrapper.appendChild(iconMessageCount);
                 iconCountWrapper.appendChild(iconCountContentWrapper);
@@ -161,13 +162,26 @@ Module.register("MMM-PushBulletNotifications", {
                     }
                 }
 
+
                 //Name of sender
                 var nameWrapper = document.createElement("td");
                 nameWrapper.className = "bright";
-                nameWrapper.innerHTML = (icon != null) ? icon.outerHTML + header : header;
 
-                notificationWrapper.appendChild(nameWrapper);
-                wrapper.appendChild(notificationWrapper);
+                if(self.config.showNameOfSender) //header
+                {
+                    nameWrapper.innerHTML = (icon != null) ? icon.outerHTML + header : header;
+                }
+                else
+                {
+                    nameWrapper.innerHTML = (icon != null) ? icon.outerHTML : null;
+                }
+
+                //Check if we have content (icon, header (sender name) or both)
+                if(nameWrapper.innerHTML)
+                {
+                    notificationWrapper.appendChild(nameWrapper);
+                    wrapper.appendChild(notificationWrapper);
+                }
 
                 //Show date time with message
                 if (self.config.showDateTime) {

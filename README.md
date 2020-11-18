@@ -93,8 +93,10 @@ modules: [
 			onlyShowLastNotificationFromApplication: false,
 			showIndividualNotifications: false,
 			showSMS: true,
+			showNameOfSender: true,
 			showMessage: true,
 			showIcons: true,
+			showMessageCount: false,
 			showDateTime: true,
 			localesDateTime: 'nl-NL',
 			playSoundOnNotificationReceived: true,
@@ -261,7 +263,15 @@ The following properties can be configured:
 				<br /><b>Default value:</b> <code>true</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
-		</tr>  
+		</tr> 
+		<tr>
+			<td><code>showNameOfSender</code></td>
+			<td>Boolean value, show the name (header) of the PushBullet sender<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
 		<tr>
 			<td><code>showMessage</code></td>
 			<td>Boolean value, show the PushBullet notification content<br />				
@@ -275,6 +285,14 @@ The following properties can be configured:
 			<td>Boolean value, show icon based on source device (desktop, phone, system icon)<br />				
 				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
 				<br /><b>Default value:</b> <code>true</code>
+				<br />This value is <b>OPTIONAL</b>
+			</td>
+		</tr>
+		<tr>
+			<td><code>showMessageCount</code></td>
+			<td>Boolean value, show the number of notfications received from Pushbullet<br />				
+				<br /><b>Possible values:</b> <code>true</code> or <code>false</code>
+				<br /><b>Default value:</b> <code>false</code>
 				<br />This value is <b>OPTIONAL</b>
 			</td>
 		</tr>
